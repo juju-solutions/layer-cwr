@@ -11,6 +11,9 @@ buildcharmjob:
             description: Should we try to push a successfull build to the Juju store
             type: boolean
             default: true
+        lpid:
+            description: Launchpad ID (namespace) under which the charm will be uploaded
+            type: string
         branch:
             description: Branch to build
             type: string

@@ -8,10 +8,12 @@ def add_job():
     gitrepo = hookenv.action_get("gitrepo")
     pushtostore = hookenv.action_get("pushtostore")
     branch = hookenv.action_get("branch")
+    lpid = hookenv.action_get("lpid")
     charmname = hookenv.action_get("charmname")
 
     rep = {"{{gitrepo}}": gitrepo,
            "{{pushtostore}}": str(pushtostore).lower(),
+           "{{lpid}}": lpid,
            "{{branch}}": branch,
            "{{charmname}}": charmname}
 
