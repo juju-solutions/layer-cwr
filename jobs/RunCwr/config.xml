@@ -1,0 +1,58 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<project>
+  <actions/>
+  <description>Run CWR!</description>
+  <keepDependencies>false</keepDependencies>
+  <properties>
+    <hudson.model.ParametersDefinitionProperty>
+      <parameterDefinitions>
+        <hudson.model.StringParameterDefinition>
+          <name>BUILD_CHARM_TARGET</name>
+          <description>What should CWR test </description>
+          <defaultValue>cs:git</defaultValue>
+        </hudson.model.StringParameterDefinition>
+        <hudson.model.StringParameterDefinition>
+          <name>CHARM_NAME</name>
+          <description>Reported name of the charm</description>
+          <defaultValue>git</defaultValue>
+        </hudson.model.StringParameterDefinition>
+        <hudson.model.StringParameterDefinition>
+          <name>CONTROLERS</name>
+          <description>List of controllers to run CWR against</description>
+          <defaultValue>lxd</defaultValue>
+        </hudson.model.StringParameterDefinition>
+      </parameterDefinitions>
+    </hudson.model.ParametersDefinitionProperty>
+  </properties>
+  <scm class="hudson.scm.NullSCM"/>
+  <canRoam>true</canRoam>
+  <disabled>false</disabled>
+  <blockBuildWhenDownstreamBuilding>false</blockBuildWhenDownstreamBuilding>
+  <blockBuildWhenUpstreamBuilding>false</blockBuildWhenUpstreamBuilding>
+  <triggers/>
+  <concurrentBuild>false</concurrentBuild>
+  <builders>
+    <hudson.tasks.Shell>
+      <command>touch totest.yaml
+echo &quot;bundle: $BUILD_CHARM_TARGET&quot; &gt;&gt; totest.yaml
+echo &quot;bundle_name: $CHARM_NAME&quot; &gt;&gt; totest.yaml
+juju switch $CONTROLERS
+juju add-model test-$BUILD_NUMBER
+cwr $CONTROLERS:test-$BUILD_NUMBER totest.yaml
+</command>
+    </hudson.tasks.Shell>
+  </builders>
+  <publishers>
+      <org.jenkinsci.plugins.postbuildscript.PostBuildScript plugin="postbuildscript@0.17">
+      <buildSteps>
+        <hudson.tasks.Shell>
+          <command>juju destroy-model test-$BUILD_NUMBER -y</command>
+        </hudson.tasks.Shell>
+      </buildSteps>
+      <scriptOnlyIfSuccess>false</scriptOnlyIfSuccess>
+      <scriptOnlyIfFailure>false</scriptOnlyIfFailure>
+      <markBuildUnstable>false</markBuildUnstable>
+    </org.jenkinsci.plugins.postbuildscript.PostBuildScript>
+   </publishers>
+  <buildWrappers/>
+</project>
