@@ -1,0 +1,35 @@
+#!/usr/bin/env python3
+import os
+from charmhelpers.core import hookenv
+from charmhelpers.core.host import chownr
+
+
+def add_job():
+    gitrepo = hookenv.action_get("gitrepo")
+    pushtostore = hookenv.action_get("pushtostore")
+    branch = hookenv.action_get("branch")
+    charmname = hookenv.action_get("charmname")
+
+    rep = {"{{gitrepo}}": gitrepo,
+           "{{pushtostore}}": str(pushtostore).lower(),
+           "{{branch}}": branch,
+           "{{charmname}}": charmname}
+
+    jenkins_job_dir = "/var/lib/jenkins/jobs/BuildCharm-{}".format(charmname)
+    os.makedirs(jenkins_job_dir, exist_ok=True)
+    template_path_dest = '{}/config.xml'.format(jenkins_job_dir)
+    template_path_source = "templates/BuildMyCharm/config.xml"
+
+    with open(template_path_source) as infile, open(template_path_dest, 'w') as outfile:
+        for line in infile:
+            for src, target in rep.items():
+                line = line.replace(src, target)
+            outfile.write(line)
+
+    chownr(jenkins_job_dir, 'jenkins', 'jenkins', chowntopdir=True)
+    hookenv.action_set({'output': 'Please reload Jenkins configs now'})
+
+
+if __name__ == "__main__":
+    add_job()
+

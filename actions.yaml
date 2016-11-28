@@ -1,0 +1,18 @@
+buildcharmjob:
+    description: Add a jenkins job that would build a charm upon commit.
+    params:
+        charmname:
+            description: Name of the charm
+            type: string
+        gitrepo:
+            description: Git repository
+            type: string
+        pushtostore:
+            description: Should we try to push a successfull build to the Juju store
+            type: boolean
+            default: true
+        branch:
+            description: Branch to build
+            type: string
+            default: "*/master"
+    required: ['charmname', 'gitrepo']

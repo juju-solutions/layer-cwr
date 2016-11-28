@@ -11,16 +11,16 @@
           <description>The email with which you login to Juju Store. </description>
           <defaultValue></defaultValue>
         </hudson.model.StringParameterDefinition>
-         <hudson.model.StringParameterDefinition>
+        <hudson.model.PasswordParameterDefinition>
           <name>PASSWORD_STRING</name>
           <description>Password to be used to login to the Juju Store. </description>
-          <defaultValue></defaultValue>
-        </hudson.model.StringParameterDefinition>
-        <hudson.model.StringParameterDefinition>
-          <name>2FA_AUTH_STRING</name>
+          <defaultValue>51CiFDQbWU8FBa/K+BvooQ==</defaultValue>
+        </hudson.model.PasswordParameterDefinition>
+        <hudson.model.PasswordParameterDefinition>
+          <name>TFA_AUTH_STRING</name>
           <description>Two-factor auth. Leave it empty if not enabled.</description>
-          <defaultValue></defaultValue>
-        </hudson.model.StringParameterDefinition>
+          <defaultValue>51CiFDQbWU8FBa/K+BvooQ==</defaultValue>
+        </hudson.model.PasswordParameterDefinition>
       </parameterDefinitions>
     </hudson.model.ParametersDefinitionProperty>
   </properties>
@@ -34,7 +34,7 @@
   <builders>
     <hudson.tasks.Shell>
       <command>
-echo &quot;$EMAIL_STRING\n$PASSWORD_STRING\n$2FA_AUTH_STRING&quot; | charm login
+echo &quot;$EMAIL_STRING\n$PASSWORD_STRING\n$TFA_AUTH_STRING&quot; | charm login
        </command>
     </hudson.tasks.Shell>
   </builders>

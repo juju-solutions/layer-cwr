@@ -2,3 +2,4 @@ includes: ['layer:basic']
 options:
   basic:
     use_venv: true
+repo: https://github.com/ktsakalozos/layer-juju-ci-env.git

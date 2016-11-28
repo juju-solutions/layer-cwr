@@ -5,7 +5,7 @@
   <keepDependencies>false</keepDependencies>
   <properties>
     <com.coravy.hudson.plugins.github.GithubProjectProperty plugin="github@1.24.0">
-      <projectUrl>https://github.com/sastix/tomee-charm-layer/</projectUrl>
+      <projectUrl>{{gitrepo}}</projectUrl>
       <displayName></displayName>
     </com.coravy.hudson.plugins.github.GithubProjectProperty>
   </properties>
@@ -13,12 +13,12 @@
     <configVersion>2</configVersion>
     <userRemoteConfigs>
       <hudson.plugins.git.UserRemoteConfig>
-        <url>https://github.com/sastix/tomee-charm-layer</url>
+        <url>{{gitrepo}}</url>
       </hudson.plugins.git.UserRemoteConfig>
     </userRemoteConfigs>
     <branches>
       <hudson.plugins.git.BranchSpec>
-        <name>*/master</name>
+        <name>{{branch}}</name>
       </hudson.plugins.git.BranchSpec>
     </branches>
     <doGenerateSubmoduleConfigurations>false</doGenerateSubmoduleConfigurations>
@@ -39,13 +39,19 @@
   <builders>
     <hudson.tasks.Shell>
       <command>
-export JUJU_REPOSITORY=&quot;/tmp/&quot;
-charm build
+        export JUJU_REPOSITORY=&quot;/tmp/&quot;
+        charm build
 
-juju switch lxd
-juju add-model test-$BUILD_NUMBER
-bundletester -e lxd:test-$BUILD_NUMBER -vFt /tmp/builds/apache-tomee
-</command>
+        juju switch lxd
+        juju add-model test-$BUILD_NUMBER
+        bundletester -e lxd:test-$BUILD_NUMBER -vFt /tmp/builds/{{charmname}}
+
+        if [ {{pushtostore}} = true ]
+        then
+          charm push /tmp/builds/{{charmname}} cs:~{{lpid}}/{{charmname}}
+        fi
+
+      </command>
     </hudson.tasks.Shell>
   </builders>
   <publishers>
