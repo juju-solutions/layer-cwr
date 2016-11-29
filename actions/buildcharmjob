@@ -1,10 +1,16 @@
 #!/usr/bin/env python3
-import os
 from charmhelpers.core import hookenv
-from charmhelpers.core.host import chownr
+from charms.reactive import RelationBase
+from jenkins import Jenkins
 
 
 def add_job():
+    jenkins_relation = (RelationBase.from_state('jenkins.available'))
+    jenkins_connection_info = jenkins_relation.get_connection_info()
+    jclient = Jenkins(jenkins_connection_info["jenkins_url"],
+                      jenkins_connection_info["admin_username"],
+                      jenkins_connection_info["admin_password"])
+
     gitrepo = hookenv.action_get("gitrepo")
     pushtostore = hookenv.action_get("pushtostore")
     branch = hookenv.action_get("branch")
@@ -17,19 +23,12 @@ def add_job():
            "{{branch}}": branch,
            "{{charmname}}": charmname}
 
-    jenkins_job_dir = "/var/lib/jenkins/jobs/BuildCharm-{}".format(charmname)
-    os.makedirs(jenkins_job_dir, exist_ok=True)
-    template_path_dest = '{}/config.xml'.format(jenkins_job_dir)
     template_path_source = "templates/BuildMyCharm/config.xml"
-
-    with open(template_path_source) as infile, open(template_path_dest, 'w') as outfile:
-        for line in infile:
-            for src, target in rep.items():
-                line = line.replace(src, target)
-            outfile.write(line)
-
-    chownr(jenkins_job_dir, 'jenkins', 'jenkins', chowntopdir=True)
-    hookenv.action_set({'output': 'Please reload Jenkins configs now'})
+    with open(template_path_source) as infile:
+        data = infile.read()
+        for src, target in rep.items():
+            data = data.replace(src, target)
+        jclient.create_job("charm-{}".format(charmname), data)
 
 
 if __name__ == "__main__":

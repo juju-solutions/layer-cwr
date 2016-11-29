@@ -1,1 +1,2 @@
 jujubigdata>=7.0.0,<8.0.0
+python-jenkins>=0.4.13,<1.0.0

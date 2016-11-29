@@ -9,6 +9,6 @@ tags:
 series: ["xenial"]
 subordinate: true
 requires:
-  host:
-    interface: juju-info
+  jenkins:
+    interface: jenkins-extension
     scope: container
