@@ -1,4 +1,5 @@
 import os
+import time
 from charmhelpers import fetch
 from charmhelpers.core import host, hookenv
 from charms.reactive import when, when_not, set_state, remove_state
@@ -46,10 +47,35 @@ def install_jenkins_jobs(connected_jenkins):
 
     plugins = ["github", "ghprb", "postbuildscript"]
     for plugin in plugins:
+        hookenv.status_set('maintenance', 'Installing plugin {}'.format(plugin))
         reboot = jclient.install_plugin(plugin)
         hookenv.log("Installing plugin {}. Restart required: {}".format(plugin, reboot))
+        installed = wait_for_plugin(plugin)
+        if not installed:
+            hookenv.log("installation of {} did not complete after 5 minutes.".format(plugin))
 
+    # Give some slack for syncing the plugins.
+    time.sleep(15)
     host.service_restart("jenkins")
 
     hookenv.status_set('active', 'Ready')
     set_state("jenkins.jobs.ready")
+
+
+def wait_for_plugin(plugin):
+    '''
+    Waits for 5 minutes to see if the plugin is available.
+    Args:
+        plugin: the plugin to look for
+
+    Returns: True if the plugin got deployed
+
+    '''
+    timeout = time.time() + 300
+    while True:
+        if time.time() > timeout:
+            return False
+        allplugins = os.listdir("/var/lib/jenkins/plugins")
+        if "{}.jpi".format(plugin) in allplugins:
+            return True
+        time.sleep(15)
