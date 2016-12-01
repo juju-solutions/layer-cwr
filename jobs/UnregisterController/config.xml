@@ -7,14 +7,8 @@
     <hudson.model.ParametersDefinitionProperty>
       <parameterDefinitions>
         <hudson.model.StringParameterDefinition>
-          <name>REGISTER_STRING</name>
-          <description>The Juju controller registration string. </description>
-          <defaultValue></defaultValue>
-        </hudson.model.StringParameterDefinition>
-        <hudson.model.StringParameterDefinition>
           <name>CONTROLLER_NAME</name>
           <description>Controller name</description>
-          <defaultValue>lxd</defaultValue>
         </hudson.model.StringParameterDefinition>
       </parameterDefinitions>
     </hudson.model.ParametersDefinitionProperty>
@@ -29,10 +23,8 @@
   <builders>
     <hudson.tasks.Shell>
       <command>
-echo &quot;pass\npass\n$CONTROLLER_NAME&quot; | juju register $REGISTER_STRING
-sed -i.bak -e &quot;s/  $CONTROLLER_NAME:/  $CONTROLLER_NAME:\n    password: pass/&quot; ~/.local/share/juju/accounts.yaml
-touch /var/lib/jenkins/controller.names
-echo $CONTROLLER_NAME >> /var/lib/jenkins/controller.names
+sed -i.bak '/$CONTROLLER_NAME\n/d' /var/lib/jenkins/controller.names
+juju unregister $CONTROLLER_NAME
        </command>
     </hudson.tasks.Shell>
   </builders>

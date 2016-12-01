@@ -1,7 +1,7 @@
 <?xml version='1.0' encoding='UTF-8'?>
 <project>
   <actions/>
-  <description>Run CWR!</description>
+  <description>Run CWR</description>
   <keepDependencies>false</keepDependencies>
   <properties>
     <hudson.model.ParametersDefinitionProperty>
@@ -17,8 +17,8 @@
           <defaultValue>git</defaultValue>
         </hudson.model.StringParameterDefinition>
         <hudson.model.StringParameterDefinition>
-          <name>CONTROLERS</name>
-          <description>List of controllers to run CWR against</description>
+          <name>CONTROLER</name>
+          <description>Controller to run CWR against</description>
           <defaultValue>lxd</defaultValue>
         </hudson.model.StringParameterDefinition>
       </parameterDefinitions>
@@ -36,9 +36,9 @@
       <command>touch totest.yaml
 echo &quot;bundle: $BUILD_CHARM_TARGET&quot; &gt;&gt; totest.yaml
 echo &quot;bundle_name: $CHARM_NAME&quot; &gt;&gt; totest.yaml
-juju switch $CONTROLERS
+juju switch $CONTROLER
 juju add-model test-$BUILD_NUMBER
-cwr $CONTROLERS:test-$BUILD_NUMBER totest.yaml
+cwr $CONTROLER:test-$BUILD_NUMBER totest.yaml
 </command>
     </hudson.tasks.Shell>
   </builders>

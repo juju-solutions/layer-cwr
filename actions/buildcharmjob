@@ -16,12 +16,14 @@ def add_job():
     branch = hookenv.action_get("branch")
     lpid = hookenv.action_get("lpid")
     charmname = hookenv.action_get("charmname")
+    controller = hookenv.action_get("controller")
 
     rep = {"{{gitrepo}}": gitrepo,
            "{{pushtostore}}": str(pushtostore).lower(),
            "{{lpid}}": lpid,
            "{{branch}}": branch,
-           "{{charmname}}": charmname}
+           "{{charmname}}": charmname,
+           "{{controller}}": controller}
 
     template_path_source = "templates/BuildMyCharm/config.xml"
     with open(template_path_source) as infile:
@@ -33,4 +35,3 @@ def add_job():
 
 if __name__ == "__main__":
     add_job()
-

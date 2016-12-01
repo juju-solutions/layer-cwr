@@ -39,17 +39,17 @@
   <builders>
     <hudson.tasks.Shell>
       <command>
-        export JUJU_REPOSITORY=&quot;/tmp/&quot;
-        charm build
+export JUJU_REPOSITORY=&quot;/tmp/&quot;
+charm build
 
-        juju switch lxd
-        juju add-model test-$BUILD_NUMBER
-        bundletester -e lxd:test-$BUILD_NUMBER -vFt /tmp/builds/{{charmname}}
+juju switch {{controller}}
+juju add-model test-$BUILD_NUMBER
+bundletester -e {{controller}}:test-$BUILD_NUMBER -vFt /tmp/builds/{{charmname}}
 
-        if [ {{pushtostore}} = true ]
-        then
-          charm push /tmp/builds/{{charmname}} cs:~{{lpid}}/{{charmname}}
-        fi
+if [ {{pushtostore}} = true ]
+then
+     charm push /tmp/builds/{{charmname}} cs:~{{lpid}}/{{charmname}}
+fi
 
       </command>
     </hudson.tasks.Shell>
