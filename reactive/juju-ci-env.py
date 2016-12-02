@@ -5,6 +5,7 @@ from charmhelpers.core import host, hookenv
 from charms.reactive import when, when_not, set_state, remove_state
 from jujubigdata import utils
 from jenkins import Jenkins, JenkinsException
+from CIGateway import CIGateway
 
 
 @when_not('juju-ci-env.installed')
@@ -24,6 +25,8 @@ def install_juju():
     utils.run_as('root', 'pip', 'install', '--upgrade', 'pip')
     utils.run_as('root', 'python', '-m', 'pip', 'install', 'bundletester')
     utils.run_as('root', 'python', '-m', 'pip', 'install', 'cloud-weather-report')
+    utils.run_as('root', 'pip', 'install', '--upgrade', 'flask')
+    utils.run_as('root', 'pip', 'install', '--upgrade', 'python-jenkins')
 
     set_state('juju-ci-env.installed')
     hookenv.status_set('active', 'Ready')
@@ -58,8 +61,23 @@ def install_jenkins_jobs(connected_jenkins):
     time.sleep(15)
     host.service_restart("jenkins")
 
+    CIGateway.start(jenkins_connection_info["jenkins_url"],
+                    jenkins_connection_info["admin_username"],
+                    jenkins_connection_info["admin_password"])
     hookenv.status_set('active', 'Ready')
     set_state("jenkins.jobs.ready")
+
+
+@when('jenkins.available', 'jenkins.has.changed')
+def ci_connection_updated(jenkins, jenkins_changed):
+    jenkins_connection_info = jenkins.get_connection_info()
+    hookenv.status_set('maintenance', 'Configuring CI gateway.')
+    CIGateway.stop()
+    CIGateway.start(jenkins_connection_info["jenkins_url"],
+                    jenkins_connection_info["admin_username"],
+                    jenkins_connection_info["admin_password"])
+    jenkins.change_acked()
+    hookenv.status_set('active', 'Ready')
 
 
 def wait_for_plugin(plugin):

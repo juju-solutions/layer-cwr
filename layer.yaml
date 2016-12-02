@@ -2,4 +2,4 @@ includes: ['layer:basic', 'interface:jenkins-extension']
 options:
   basic:
     use_venv: true
-repo: https://github.com/ktsakalozos/layer-juju-ci-env.git
+repo: https://github.com/juju-solutions/layer-juju-ci-env.git

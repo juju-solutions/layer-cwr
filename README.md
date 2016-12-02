@@ -1,4 +1,4 @@
-# Juju collectd subordinate charm
+# Juju CI environment charm
 
 This subordinate charm will deploy collectd daemon
 

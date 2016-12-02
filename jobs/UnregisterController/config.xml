@@ -23,8 +23,8 @@
   <builders>
     <hudson.tasks.Shell>
       <command>
-sed -i.bak '/$CONTROLLER_NAME\n/d' /var/lib/jenkins/controller.names
-juju unregister $CONTROLLER_NAME
+sed -i.bak '/lxd/c\' /var/lib/jenkins/controller.names
+juju unregister $CONTROLLER_NAME -y
        </command>
     </hudson.tasks.Shell>
   </builders>
