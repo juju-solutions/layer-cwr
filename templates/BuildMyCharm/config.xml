@@ -13,6 +13,7 @@
     <configVersion>2</configVersion>
     <userRemoteConfigs>
       <hudson.plugins.git.UserRemoteConfig>
+        {{refspec}}
         <url>{{gitrepo}}</url>
       </hudson.plugins.git.UserRemoteConfig>
     </userRemoteConfigs>
@@ -46,11 +47,12 @@ juju switch {{controller}}
 juju add-model test-$BUILD_NUMBER
 bundletester -e {{controller}}:test-$BUILD_NUMBER -vFt /tmp/builds/{{charmname}}
 
-if [ {{pushtostore}} = true ]
+if [ ! -z "{{pushtochannel}}" ]
 then
-     charm push /tmp/builds/{{charmname}} cs:~{{lpid}}/{{charmname}}
+     CHARMLOCATION=`charm push /tmp/builds/{{charmname}} cs:~{{lpid}}/{{charmname}} | head -1 | awk '{print $2}'`
+     charm release $CHARMLOCATION --channel={{pushtochannel}}
+     charm grant $CHARMLOCATION everyone --channel={{pushtochannel}}
 fi
-
       </command>
     </hudson.tasks.Shell>
   </builders>

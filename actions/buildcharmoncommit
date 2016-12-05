@@ -12,17 +12,19 @@ def add_job():
                       jenkins_connection_info["admin_password"])
 
     gitrepo = hookenv.action_get("gitrepo")
-    pushtostore = hookenv.action_get("pushtostore")
+    pushtochannel = hookenv.action_get("pushtochannel")
     branch = hookenv.action_get("branch")
     lpid = hookenv.action_get("lpid")
     charmname = hookenv.action_get("charmname")
     controller = hookenv.action_get("controller")
+    refspec = ""
 
     rep = {"{{gitrepo}}": gitrepo,
-           "{{pushtostore}}": str(pushtostore).lower(),
+           "{{pushtochannel}}": pushtochannel,
            "{{lpid}}": lpid,
            "{{branch}}": branch,
            "{{charmname}}": charmname,
+           "{{refspec}}": refspec,
            "{{controller}}": controller}
 
     template_path_source = "templates/BuildMyCharm/config.xml"

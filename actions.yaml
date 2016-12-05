@@ -1,5 +1,5 @@
-buildcharmjob:
-    description: Add a jenkins job that would build a charm upon commit.
+buildcharmoncommit:
+    description: Add a job job that would build a charm upon commit
     params:
         charmname:
             description: Name of the charm
@@ -7,10 +7,13 @@ buildcharmjob:
         gitrepo:
             description: Git repository
             type: string
-        pushtostore:
-            description: Should we try to push a successfull build to the Juju store
-            type: boolean
-            default: true
+        controller:
+            description: Name of controller to be used
+            type: string
+        pushtochannel:
+            description: Charm store channel to push a successfull build. Leave empty to not push
+            type: string
+            default: ""
         lpid:
             description: Launchpad ID (namespace) under which the charm will be uploaded
             type: string
@@ -18,4 +21,24 @@ buildcharmjob:
             description: Branch to build
             type: string
             default: "*/master"
-    required: ['charmname', 'gitrepo']
+    required: ['charmname', 'gitrepo', 'controller']
+buildcharmonrelease:
+    description: Add a job that would build a charm upon release
+    params:
+        charmname:
+            description: Name of the charm
+            type: string
+        gitrepo:
+            description: Git repository
+            type: string
+        controller:
+            description: Name of controller to be used
+            type: string
+        pushtochannel:
+            description: Charm store channel to push a successfull build. Leave empty to not push
+            type: string
+            default: ""
+        lpid:
+            description: Launchpad ID (namespace) under which the charm will be uploaded
+            type: string
+    required: ['charmname', 'gitrepo', 'controller']
