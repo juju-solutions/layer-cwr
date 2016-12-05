@@ -12,3 +12,6 @@ requires:
   jenkins:
     interface: jenkins-extension
     scope: container
+provides:
+  ci-client:
+    interface: charms-ci

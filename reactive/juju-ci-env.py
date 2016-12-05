@@ -68,6 +68,11 @@ def install_jenkins_jobs(connected_jenkins):
     set_state("jenkins.jobs.ready")
 
 
+@when('ci-client.joined')
+def client_joined(client):
+    client.set_ready(5000)
+
+
 @when('jenkins.available', 'jenkins.has.changed')
 def ci_connection_updated(jenkins, jenkins_changed):
     jenkins_connection_info = jenkins.get_connection_info()

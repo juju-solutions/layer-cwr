@@ -1,5 +1,5 @@
-includes: ['layer:basic', 'interface:jenkins-extension']
+includes: ['layer:basic', 'interface:jenkins-extension', 'interface:charms-ci']
+repo: https://github.com/juju-solutions/layer-juju-ci-env.git
 options:
   basic:
     use_venv: true
-repo: https://github.com/juju-solutions/layer-juju-ci-env.git
