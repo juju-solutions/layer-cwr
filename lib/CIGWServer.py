@@ -8,6 +8,11 @@ from jenkins import Jenkins
 
 app = Flask(__name__)
 
+@app.route("/ping")
+def ping():
+    return "ok"
+
+
 @app.route("/ci/v1.0/controllers")
 def list_controllers():
     controllersfilepath = "/var/lib/jenkins/controller.names"
@@ -15,6 +20,17 @@ def list_controllers():
     if os.path.exists(controllersfilepath):
         controllers = [line.rstrip('\n') for line in open(controllersfilepath)]
     return json.dumps(controllers)
+
+
+@app.route("/ci/v1.0/controllers/add/<string:name>")
+def add_controller(name):
+    token = request.args.get("token")
+    jclient = get_jenkins_clinet()
+    next_build_number = jclient.get_job_info("RegisterController")['nextBuildNumber']
+    params = {'REGISTER_STRING': token,
+              'CONTROLLER_NAME': name}
+    jclient.build_job("RegisterController",  params)
+    return str(next_build_number)
 
 
 @app.route("/ci/v1.0/build/<string:jobname>/<int:buildid>")
