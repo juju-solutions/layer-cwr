@@ -1,4 +1,4 @@
-includes: ['layer:basic', 'interface:jenkins-extension', 'interface:charms-ci']
+includes: ['layer:basic', 'interface:jenkins-extension', 'interface:cwr-ci']
 repo: https://github.com/juju-solutions/layer-juju-ci-env.git
 options:
   basic:
