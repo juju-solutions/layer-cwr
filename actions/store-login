@@ -4,17 +4,25 @@ import errno
 import base64
 import subprocess
 from charmhelpers.core.host import chownr
+from charmhelpers.core import hookenv
+
+
+USER = "jenkins"
+GROUP = "jenkins"
+HOME = "/var/lib/jenkins"
 
 
 def charmstore_login():
-    """Login to the charmstore.
+    """
+    Login to the charmstore.
+
     As long as we have an oauth token (which will be passed in via config),
     `charm login` should be non-interactive, creating/refreshing ~/.go-cookies
-    as necessary. (shamelessly stolen from review-queue!)
+    as necessary. (shamelessly stolen from review-queue charm)
     """
-    token_path = '/var/lib/jenkins/.local/share/juju/store-usso-token'
+    token_path = "{}/.local/share/juju/store-usso-token".format(HOME)
     if not os.path.exists(token_path):
-        token_value = hookenv.action_get('charmstoretoken')
+        token_value = hookenv.action_get('charmstore-usso-token')
         if not token_value:
             raise ValueError('Missing USSO token')
         if not os.path.isdir(os.path.dirname(token_path)):
@@ -26,10 +34,10 @@ def charmstore_login():
                 else:
                     raise
         with open(token_path, 'w') as f:
-            f.write(base64.b64decode(token_value))
+            f.write(base64.b64decode(token_value).decode('utf-8'))
         os.chmod(token_path, 0o600)
-    chownr('/var/lib/jenkins/.local', chowntopdir=True)
-    cmd = ['su', 'jenkins', '-c', 'charm login']
+    chownr('{}/.local'.format(HOME), USER, GROUP, chowntopdir=True)
+    cmd = ['su', USER, '-c', 'charm login']
     if subprocess.call(cmd) != 0:
         raise Exception
 
