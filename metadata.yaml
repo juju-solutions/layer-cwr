@@ -1,8 +1,8 @@
-name: juju-ci-env
-summary: Install Juju along with all tools needed for a CI
-maintainer: Big Data Team <bigdata@lists.ubuntu.com>
+name: cwr
+summary: Install Cloud Weather Report with all tools needed for a CI
+maintainer: Juju Big Data <bigdata@lists.ubuntu.com>
 description: |
-  Install Juju along with its toolchain needed for testing
+  Install Cloud Weather Report along with its toolchain needed for testing
   charms in the context of a CI.
 tags:
   - CI
@@ -14,4 +14,4 @@ requires:
     scope: container
 provides:
   ci-client:
-    interface: charms-ci
+    interface: cwr-ci
