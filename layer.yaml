@@ -1,5 +1,5 @@
 includes: ['layer:basic', 'interface:jenkins-extension', 'interface:cwr-ci']
-repo: https://github.com/juju-solutions/layer-juju-ci-env.git
+repo: https://github.com/juju-solutions/layer-cwr.git
 options:
   basic:
     use_venv: true
