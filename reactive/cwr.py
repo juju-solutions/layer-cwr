@@ -2,9 +2,9 @@ import os
 import time
 from charmhelpers import fetch
 from charmhelpers.core import host, hookenv
-from charms.reactive import when, when_not, set_state, remove_state
+from charms.reactive import when, when_not, set_state
 from jujubigdata import utils
-from jenkins import Jenkins, JenkinsException
+from jenkins import Jenkins
 from CIGateway import CIGateway
 
 
@@ -13,7 +13,8 @@ def install_juju():
     hookenv.status_set('maintenance', 'installing juju')
     fetch.add_source("ppa:juju/stable")
     fetch.apt_update()
-    fetch.apt_install(["juju", "zfsutils-linux", "charm-tools", "unzip", "expect"])
+    fetch.apt_install(["juju", "zfsutils-linux", "charm-tools",
+                       "unzip", "expect"])
 
     utils.run_as('root', 'lxd', 'init', '--auto')
     utils.run_as('root', 'scripts/lxd-reconf.sh')
@@ -23,8 +24,10 @@ def install_juju():
         sudoers.write("%jenkins ALL=NOPASSWD: ALL\n")
     utils.run_as('root', 'usermod', '-a', '-G', 'lxd', 'jenkins')
     utils.run_as('root', 'pip', 'install', '--upgrade', 'pip')
-    utils.run_as('root', 'python', '-m', 'pip', 'install', 'bundletester')
-    utils.run_as('root', 'python', '-m', 'pip', 'install', 'cloud-weather-report')
+    utils.run_as('root', 'python', '-m',
+                 'pip', 'install', 'bundletester')
+    utils.run_as('root', 'python', '-m',
+                 'pip', 'install', 'cloud-weather-report')
     utils.run_as('root', 'pip', 'install', '--upgrade', 'flask')
     utils.run_as('root', 'pip', 'install', '--upgrade', 'python-jenkins')
 
@@ -50,12 +53,15 @@ def install_jenkins_jobs(connected_jenkins):
 
     plugins = ["github", "ghprb", "postbuildscript"]
     for plugin in plugins:
-        hookenv.status_set('maintenance', 'Installing plugin {}'.format(plugin))
+        hookenv.status_set('maintenance', 'Installing plugin {}'
+                           .format(plugin))
         reboot = jclient.install_plugin(plugin)
-        hookenv.log("Installing plugin {}. Restart required: {}".format(plugin, reboot))
+        hookenv.log("Installing plugin {}. Restart required: {}"
+                    .format(plugin, reboot))
         installed = wait_for_plugin(plugin)
         if not installed:
-            hookenv.log("installation of {} did not complete after 5 minutes.".format(plugin))
+            hookenv.log("installation of {} did not complete on time."
+                        .format(plugin))
 
     # Give some slack for syncing the plugins.
     time.sleep(15)
@@ -85,7 +91,7 @@ def ci_connection_updated(jenkins, jenkins_changed):
     hookenv.status_set('active', 'Ready')
 
 
-def wait_for_plugin(plugin):
+def wait_for_plugin(plugin, wait_for_secs=300):
     '''
     Waits for 5 minutes to see if the plugin is available.
     Args:
@@ -94,11 +100,11 @@ def wait_for_plugin(plugin):
     Returns: True if the plugin got deployed
 
     '''
-    timeout = time.time() + 300
+    timeout = time.time() + wait_for_secs
     while True:
         if time.time() > timeout:
             return False
-        allplugins = os.listdir("/var/lib/jenkins/plugins")
-        if "{}.jpi".format(plugin) in allplugins:
+        all_plugins = os.listdir("/var/lib/jenkins/plugins")
+        if "{}.jpi".format(plugin) in all_plugins:
             return True
         time.sleep(15)

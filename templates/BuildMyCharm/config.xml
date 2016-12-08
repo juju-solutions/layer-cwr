@@ -49,9 +49,9 @@ bundletester -e {{controller}}:test-$BUILD_NUMBER -vFt /tmp/builds/{{charmname}}
 
 if [ ! -z "{{pushtochannel}}" ]
 then
-     CHARMLOCATION=`charm push /tmp/builds/{{charmname}} cs:~{{lpid}}/{{charmname}} | head -1 | awk '{print $2}'`
-     charm release $CHARMLOCATION --channel={{pushtochannel}}
-     charm grant $CHARMLOCATION everyone --channel={{pushtochannel}}
+     CHARM_LOCATION=`charm push /tmp/builds/{{charmname}} cs:~{{lpid}}/{{charmname}} | head -1 | awk '{print $2}'`
+     charm release $CHARM_LOCATION --channel={{pushtochannel}}
+     charm grant $CHARM_LOCATION everyone --channel={{pushtochannel}}
 fi
       </command>
     </hudson.tasks.Shell>
