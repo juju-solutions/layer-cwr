@@ -1,72 +1,44 @@
-build-on-commit:
-    description: Add a job job that would build a charm upon commit.
+buildcharmoncommit:
+    description: Add a job job that would build a charm upon commit
     params:
-        charm-name:
-            description: Name of the charm.
+        charmname:
+            description: Name of the charm
             type: string
-        repo:
-            description: Git repository.
+        gitrepo:
+            description: Git repository
             type: string
         controller:
-            description: Name of controller to be used.
+            description: Name of controller to be used
             type: string
-        push-to-channel:
-            description: Charm store channel to push a successfull build. Leave empty to not push.
+        pushtochannel:
+            description: Charm store channel to push a successfull build. Leave empty to not push
             type: string
             default: ""
-        lp-id:
-            description: Launchpad ID (namespace) under which the charm will be uploaded.
+        lpid:
+            description: Launchpad ID (namespace) under which the charm will be uploaded
             type: string
         branch:
-            description: Branch to build.
+            description: Branch to build
             type: string
             default: "*/master"
-    required: ['charm-name', 'repo', 'controller']
-build-on-release:
-    description: Add a job that would build a charm upon release.
+    required: ['charmname', 'gitrepo', 'controller']
+buildcharmonrelease:
+    description: Add a job that would build a charm upon release
     params:
-        charm-name:
-            description: Name of the charm.
+        charmname:
+            description: Name of the charm
             type: string
-        repo:
-            description: Git repository.
+        gitrepo:
+            description: Git repository
             type: string
         controller:
-            description: Name of controller to be used.
+            description: Name of controller to be used
             type: string
-        push-to-channel:
-            description: Charm store channel to push a successfull build. Leave empty to not push.
+        pushtochannel:
+            description: Charm store channel to push a successfull build. Leave empty to not push
             type: string
             default: ""
-        lp-id:
-            description: Launchpad ID (namespace) under which the charm will be uploaded.
+        lpid:
+            description: Launchpad ID (namespace) under which the charm will be uploaded
             type: string
-    required: ['charm-name', 'repo', 'controller']
-store-login:
-    description: Initialise session with the Juju store.
-    params:
-        charmstore-usso-token:
-            description: The base64 representation of the OATH charmstore token.
-            type: string
-    required: ['charmstore-usso-token']
-store-logout:
-    description: Terminate the session with the Juju store.
-register-controller:
-    description: Register a controller.
-    params:
-        token:
-            description: The token used to register the controller.
-            type: string
-        name:
-            description: Human friendly name for controller.
-            type: string
-    required: ['token', 'name']
-unregister-controller:
-    description: Unregister a controller.
-    params:
-        name:
-            description: Name of controller.
-            type: string
-    required: ['name']
-list-controllers:
-    description: List all available controllers.
+    required: ['charmname', 'gitrepo', 'controller']
