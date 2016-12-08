@@ -91,7 +91,7 @@ def ci_connection_updated(jenkins, jenkins_changed):
     hookenv.status_set('active', 'Ready')
 
 
-def wait_for_plugin(plugin, wait_for=300):
+def wait_for_plugin(plugin, wait_for_secs=300):
     '''
     Waits for 5 minutes to see if the plugin is available.
     Args:
@@ -100,7 +100,7 @@ def wait_for_plugin(plugin, wait_for=300):
     Returns: True if the plugin got deployed
 
     '''
-    timeout = time.time() + wait_for
+    timeout = time.time() + wait_for_secs
     while True:
         if time.time() > timeout:
             return False
