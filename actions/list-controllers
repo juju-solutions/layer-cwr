@@ -1,7 +1,12 @@
 #!/usr/bin/env python3
+import sys
+sys.path.append('lib')
+
 import os
 import json
 from charmhelpers.core import hookenv
+from controller.helpers import get_controllers
+
 
 HOME = "/var/lib/jenkins"
 
@@ -11,11 +16,7 @@ def list_controllers():
 
     Returns: The human friendly names of the registered controllers
     '''
-
-    controllers_file_path = "{}/controller.names".format(HOME)
-    controllers = []
-    if os.path.exists(controllers_file_path):
-        controllers = [line.rstrip('\n') for line in open(controllers_file_path)]
+    controllers = get_controllers()
     hookenv.action_set({"results": json.dumps(controllers)})
     hookenv.action_set({'outcome': 'success'})
 

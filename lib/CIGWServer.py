@@ -1,9 +1,13 @@
 #!/usr/bin/env python3
+import sys
+sys.path.append('lib')
+
 from os import path
 from io import open
 from json import dumps
 from flask import Flask, request
 from jenkins import Jenkins
+from controller.helpers import get_controllers
 
 
 app = Flask(__name__)
@@ -19,11 +23,7 @@ def ping():
 #
 @app.route("/ci/v1.0/controllers")
 def list_controllers():
-    controllers_file_path = "/var/lib/jenkins/controller.names"
-    controllers = []
-    if path.exists(controllers_file_path):
-        controllers = [line.rstrip('\n')
-                       for line in open(controllers_file_path)]
+    controllers = get_controllers()
     return dumps(controllers)
 
 
