@@ -40,6 +40,12 @@
   <builders>
     <hudson.tasks.Shell>
       <command>
+if [ ! -f "first-run.lock" ]; then
+  touch "first-run.lock"
+  echo "First run automaticaly triggered. Skipped."
+  exit 0
+fi
+
 export JUJU_REPOSITORY=&quot;/tmp/&quot;
 charm build
 
