@@ -160,6 +160,8 @@ def wait_for_plugin(plugin, wait_for_secs=300):
         if time.time() > timeout:
             return False
         all_plugins = os.listdir("/var/lib/jenkins/plugins")
+        if "{}.hpi".format(plugin) in all_plugins:
+            return True
         if "{}.jpi".format(plugin) in all_plugins:
             return True
         time.sleep(15)
