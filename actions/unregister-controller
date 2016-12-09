@@ -5,6 +5,7 @@ from charms.reactive import RelationBase
 from jenkins import Jenkins
 from subprocess import call
 
+
 def unregister_controller():
     '''
     Register a controller. A call to the Jenkins interface is performed

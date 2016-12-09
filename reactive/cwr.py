@@ -13,6 +13,7 @@ from charms.reactive import (
 from jujubigdata import utils
 from jenkins import Jenkins
 from CIGateway import CIGateway
+from controller.helpers import get_controllers
 
 
 @when_not('juju-ci-env.installed')
@@ -77,8 +78,8 @@ def install_jenkins_jobs(connected_jenkins):
     CIGateway.start(jenkins_connection_info["jenkins_url"],
                     jenkins_connection_info["admin_username"],
                     jenkins_connection_info["admin_password"])
-    report_status()
     set_state("jenkins.jobs.ready")
+    report_status()
 
 
 @when('ci-client.joined')
@@ -142,15 +143,6 @@ def inform_client(client):
         client.clear_ready()
     else:
         client.set_ready(5000, controllers)
-
-
-def get_controllers():
-    controllers_file_path = "/var/lib/jenkins/controller.names"
-    controllers = []
-    if os.path.exists(controllers_file_path):
-        controllers = [line.rstrip('\n') for line in open(controllers_file_path)]
-
-    return controllers
 
 
 def wait_for_plugin(plugin, wait_for_secs=300):
