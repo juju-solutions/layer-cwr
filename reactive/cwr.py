@@ -13,7 +13,7 @@ from charms.reactive import (
 from jujubigdata import utils
 from jenkins import Jenkins
 from CIGateway import CIGateway
-from controller.helpers import get_controllers
+from controller import helpers
 
 
 @when_not('juju-ci-env.installed')
@@ -118,7 +118,7 @@ def report_status():
         return
 
     # jenkins.available and jenkins.jobs.ready are set from here on
-    controllers = get_controllers()
+    controllers = helpers.get_controllers()
     if len(controllers) == 0:
         hookenv.status_set('blocked', 'waiting for controller registration')
         return
@@ -127,7 +127,7 @@ def report_status():
     hookenv.status_set('active', 'ready')
 
 
-@when_file_changed('/var/lib/jenkins/controller.names')
+@when_file_changed(helpers.CONTROLLERS_LIST_FILE)
 def controllers_updated():
     hookenv.log("Contorllers file has changed")
     if is_state('ci-client.joined'):
@@ -138,7 +138,7 @@ def controllers_updated():
 
 
 def inform_client(client):
-    controllers = get_controllers()
+    controllers = helpers.get_controllers()
     if len(controllers) == 0 or not is_state('jenkins.available'):
         client.clear_ready()
     else:
