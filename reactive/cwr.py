@@ -40,7 +40,7 @@ def install_juju():
     utils.run_as('root', 'pip', 'install', '--upgrade', 'python-jenkins')
 
     set_state('juju-ci-env.installed')
-    hookenv.status_set('waiting', 'jenkins jobs to be uploaded')
+    report_status()
 
 
 @when('jenkins.available', 'juju-ci-env.installed')
@@ -123,7 +123,7 @@ def report_status():
         hookenv.status_set('blocked', 'waiting for controller registration')
         return
 
-    # jenkins.available and jenkins.jobs.ready and controlelrs > 0 from here on
+    # jenkins.available and jenkins.jobs.ready and controllers > 0 from here on
     hookenv.status_set('active', 'ready')
 
 
