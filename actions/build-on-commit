@@ -20,6 +20,7 @@ def add_job():
            "{{lpid}}": hookenv.action_get("lp-id"),
            "{{branch}}": hookenv.action_get("branch"),
            "{{charmname}}": hookenv.action_get("charm-name"),
+           "{{referencebundle}}": hookenv.action_get("reference-bundle"),
            "{{refspec}}": "",
            "{{controller}}": hookenv.action_get("controller")}
 
