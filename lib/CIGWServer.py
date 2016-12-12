@@ -1,8 +1,5 @@
 #!/usr/bin/env python3
 import sys
-sys.path.append('lib')
-
-from os import path
 from io import open
 from json import dumps
 from flask import Flask, request
@@ -10,6 +7,7 @@ from jenkins import Jenkins
 from controller.helpers import get_controllers
 
 
+sys.path.append('lib')
 app = Flask(__name__)
 
 
