@@ -1,17 +1,16 @@
 #!/usr/bin/env python3
 
 import sys
-sys.path.append('lib')
-
 import time
 import yaml
 
-from charms.layer.basic import activate_venv
+sys.path.append('lib')
+from charms.layer.basic import activate_venv  # noqa: E402
 activate_venv()
 
-from charmhelpers.core import hookenv
-from jenkins import NotFoundException
-from theblues import charmstore
+from charmhelpers.core import hookenv  # noqa: E402
+from jenkins import NotFoundException  # noqa: E402
+from theblues import charmstore  # noqa: E402
 
 
 def app_from_bundle(bundle, charm):

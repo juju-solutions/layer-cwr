@@ -1,14 +1,15 @@
 #!/usr/bin/env python3
-import sys
-sys.path.append('lib')
 
-from charms.layer.basic import activate_venv
+import sys
+
+sys.path.append('lib')
+from charms.layer.basic import activate_venv  # noqa: E402
 activate_venv()
 
-from charmhelpers.core import hookenv
-from charms.reactive import RelationBase
-from cwrhelpers import app_from_bundle, fail_action
-from jenkins import Jenkins
+from charmhelpers.core import hookenv  # noqa: E402
+from charms.reactive import RelationBase  # noqa: E402
+from cwrhelpers import app_from_bundle, fail_action  # noqa: E402
+from jenkins import Jenkins  # noqa: E402
 
 
 def add_job():
@@ -26,8 +27,8 @@ def add_job():
     charm_name = hookenv.action_get("charm-name")
     if hookenv.action_get("reference-bundle"):
         bundle_name = hookenv.action_get("reference-bundle")
-        if bundle_name.startswith("cs:"):
-            bundle_name = bundle_name[3:]
+        if not bundle_name.startswith("cs:"):
+            bundle_name = "cs:{}".format(bundle_name)
         bundle_app_name = app_from_bundle(bundle_name, charm_name)
 
         if not bundle_app_name:
@@ -38,7 +39,7 @@ def add_job():
            "{{lpid}}": hookenv.action_get("lp-id") or "",
            "{{branch}}": hookenv.action_get("branch"),
            "{{charmname}}": charm_name,
-           "{{referencebundle}}": "cs:{}".format(bundle_name) or "",
+           "{{referencebundle}}": bundle_name or "",
            "{{bundleappname}}": bundle_app_name or "",
            "{{refspec}}": "",
            "{{controller}}": hookenv.action_get("controller")}
