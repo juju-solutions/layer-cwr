@@ -1,11 +1,17 @@
 #!/usr/bin/env python3
-import os
-import errno
-import base64
-import subprocess
-from charmhelpers.core.host import chownr
-from charmhelpers.core import hookenv
 
+import base64
+import errno
+import os
+import subprocess
+import sys
+
+sys.path.append('lib')
+from charms.layer.basic import activate_venv  # noqa: E402
+activate_venv()
+
+from charmhelpers.core.host import chownr  # noqa: E402
+from charmhelpers.core import hookenv  # noqa: E402
 
 USER = "jenkins"
 GROUP = "jenkins"
