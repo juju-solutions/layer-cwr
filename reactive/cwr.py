@@ -6,6 +6,7 @@ from charms.reactive import (
     when,
     when_not,
     set_state,
+    remove_state,
     is_state,
     when_file_changed,
     RelationBase
@@ -54,6 +55,8 @@ def install_jenkins_jobs(connected_jenkins):
 
     for dirname, dirnames, _ in os.walk('jobs'):
         for subdirname in dirnames:
+            if jclient.job_exists(subdirname):
+                jclient.delete_job(subdirname)
             jobfilename = os.path.join(dirname, subdirname, "config.xml")
             with open(jobfilename, 'r') as jobfile:
                 configxml = jobfile.read()
@@ -79,6 +82,28 @@ def install_jenkins_jobs(connected_jenkins):
                     jenkins_connection_info["admin_username"],
                     jenkins_connection_info["admin_password"])
     set_state("jenkins.jobs.ready")
+    report_status()
+
+
+@when('jenkins.jobs.ready')
+@when_not('jenkins.available')
+def cleanup_jenkins():
+    '''
+    Try to remove the jenkins jobs setup during initialisation,
+    and stop the CI gateway service.
+    '''
+    hookenv.status_set('maintenance', 'deleting jenkins jobs')
+
+    # Since Jenkins is no more available. Ask the CIGateway to provide
+    # a jenkins client (and hope Jenkins is still there)
+    jclient = CIGateway.get_current_jenkins()
+
+    for _, dirnames, _ in os.walk('jobs'):
+        for subdirname in dirnames:
+            jclient.delete_job(subdirname)
+
+    CIGateway.stop()
+    remove_state("jenkins.jobs.ready")
     report_status()
 
 
@@ -109,7 +134,7 @@ def ci_connection_updated(jenkins, jenkins_changed):
 
 def report_status():
     if not is_state('jenkins.available'):
-        hookenv.status_set('waiting', 'waiting for jenkins to become available')
+        hookenv.status_set('waiting', 'wait for jenkins to become available')
         return
 
     # jenkins.available is set from here on
