@@ -1,6 +1,5 @@
 import os
 
-
 CONTROLLERS_LIST_FILE = "/var/lib/jenkins/controller.names"
 
 

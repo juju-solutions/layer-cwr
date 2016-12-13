@@ -22,23 +22,14 @@ def install_juju():
     hookenv.status_set('maintenance', 'installing juju')
     fetch.add_source("ppa:juju/stable")
     fetch.apt_update()
-    fetch.apt_install(["juju", "zfsutils-linux", "charm-tools",
-                       "unzip", "expect"])
-
-    utils.run_as('root', 'lxd', 'init', '--auto')
-    utils.run_as('root', 'scripts/lxd-reconf.sh')
+    fetch.apt_install(["juju", "charm-tools"])
+    # bt/cwr are not py3 compatible yet (hence not in the wheelhouse)
+    utils.run_as('root', 'pip2', 'install',
+                 'bundletester', 'cloud-weather-report')
 
     # Make user jenkins parametrised. And this action as well
     with open("/etc/sudoers", "a") as sudoers:
         sudoers.write("%jenkins ALL=NOPASSWD: ALL\n")
-    utils.run_as('root', 'usermod', '-a', '-G', 'lxd', 'jenkins')
-    utils.run_as('root', 'pip', 'install', '--upgrade', 'pip')
-    utils.run_as('root', 'python', '-m',
-                 'pip', 'install', 'bundletester')
-    utils.run_as('root', 'python', '-m',
-                 'pip', 'install', 'cloud-weather-report')
-    utils.run_as('root', 'pip', 'install', '--upgrade', 'flask')
-    utils.run_as('root', 'pip', 'install', '--upgrade', 'python-jenkins')
 
     set_state('juju-ci-env.installed')
     report_status()

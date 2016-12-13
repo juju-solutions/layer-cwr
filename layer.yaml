@@ -2,4 +2,6 @@ includes: ['layer:basic', 'interface:jenkins-extension', 'interface:cwr-ci']
 repo: https://github.com/juju-solutions/layer-cwr.git
 options:
   basic:
+    packages:
+      - unzip
     use_venv: true

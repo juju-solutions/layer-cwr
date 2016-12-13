@@ -1,7 +1,7 @@
-import io
-from subprocess import Popen, call
-from jujubigdata import utils
+from io import open
 from jenkins import Jenkins
+from jujubigdata import utils
+from subprocess import Popen, call
 
 
 class CIGateway:
@@ -9,7 +9,7 @@ class CIGateway:
     @classmethod
     def start(cls, jenkins_url, jenkins_user, jenkins_pass, user='jenkins'):
         properties_path = "/var/lib/jenkins/CIGWServer.properties"
-        with io.open(properties_path, 'w') as properties_file:
+        with open(properties_path, 'w') as properties_file:
             properties_file.write("{}\n".format(jenkins_url))
             properties_file.write("{}\n".format(jenkins_user))
             properties_file.write("{}\n".format(jenkins_pass))
