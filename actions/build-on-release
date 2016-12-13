@@ -27,8 +27,10 @@ def add_job():
     charm_name = hookenv.action_get("charm-name")
     if hookenv.action_get("reference-bundle"):
         bundle_name = hookenv.action_get("reference-bundle")
-        if not bundle_name.startswith("cs:"):
-            bundle_name = "cs:{}".format(bundle_name)
+        if bundle_name.startswith("cs:"):
+            bundle_name = bundle_name[3:]
+        elif bundle_name.startswith("bundle:"):
+            bundle_name = bundle_name[7:]
         bundle_app_name = app_from_bundle(bundle_name, charm_name)
 
         if not bundle_app_name:

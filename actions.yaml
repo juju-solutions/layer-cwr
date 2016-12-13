@@ -7,7 +7,7 @@ build-on-commit:
         reference-bundle:
             description: |
                 Optional charm store URL for a bundle to use to test the given
-                charm. For example, "cs:~charmers/mediawiki-single".
+                charm. For example, "~charmers/mediawiki-single".
             type: string
             default: ""
         repo:
@@ -34,6 +34,12 @@ build-on-release:
         charm-name:
             description: Name of the charm.
             type: string
+        reference-bundle:
+            description: |
+                Optional charm store URL for a bundle to use to test the given
+                charm. For example, "~charmers/mediawiki-single".
+            type: string
+            default: ""
         repo:
             description: Git repository.
             type: string
