@@ -8,6 +8,7 @@ activate_venv()
 
 from charmhelpers.core import hookenv  # noqa: E402
 from charms.reactive import RelationBase  # noqa: E402
+from cwrhelpers import app_from_bundle, fail_action  # noqa: E402
 from jenkins import Jenkins  # noqa: E402
 
 
@@ -22,14 +23,25 @@ def add_job():
                       jenkins_connection_info["admin_username"],
                       jenkins_connection_info["admin_password"])
 
+    # If we have a reference bundle, determine the app name used for our charm
     charm_name = hookenv.action_get("charm-name")
-    refspec = "<refspec>+refs/tags/*:refs/remotes/origin/tags/*</refspec>"
+    if hookenv.action_get("reference-bundle"):
+        bundle_name = hookenv.action_get("reference-bundle")
+        if not bundle_name.startswith("cs:"):
+            bundle_name = "cs:{}".format(bundle_name)
+        bundle_app_name = app_from_bundle(bundle_name, charm_name)
 
+        if not bundle_app_name:
+            fail_action("{} not found in {}".format(charm_name, bundle_name))
+
+    refspec = "<refspec>+refs/tags/*:refs/remotes/origin/tags/*</refspec>"
     rep = {"{{gitrepo}}": hookenv.action_get("repo"),
-           "{{pushtochannel}}": hookenv.action_get("push-to-channel"),
-           "{{lpid}}": hookenv.action_get("lp-id"),
+           "{{pushtochannel}}": hookenv.action_get("push-to-channel") or "",
+           "{{lpid}}": hookenv.action_get("lp-id") or "",
            "{{branch}}": "*/tags/*",
            "{{charmname}}": charm_name,
+           "{{referencebundle}}": bundle_name or "",
+           "{{bundleappname}}": bundle_app_name or "",
            "{{refspec}}": refspec,
            "{{controller}}": hookenv.action_get("controller")}
 
