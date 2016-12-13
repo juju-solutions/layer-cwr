@@ -55,6 +55,8 @@ def install_jenkins_jobs(connected_jenkins):
 
     for dirname, dirnames, _ in os.walk('jobs'):
         for subdirname in dirnames:
+            if jclient.job_exists(subdirname):
+                jclient.delete_job(subdirname)
             jobfilename = os.path.join(dirname, subdirname, "config.xml")
             with open(jobfilename, 'r') as jobfile:
                 configxml = jobfile.read()
