@@ -50,17 +50,17 @@ export JUJU_REPOSITORY=&quot;/tmp/&quot;
 charm build
 
 juju switch {{controller}}
-juju add-model test-$BUILD_NUMBER
+juju add-model test-{{charmname}}-$BUILD_NUMBER
 
 if [ -z "{{referencebundle}}"]
 then
-    bundletester -e {{controller}}:test-$BUILD_NUMBER \
+    bundletester -e {{controller}}:test-{{charmname}}-$BUILD_NUMBER \
       -vFt /tmp/builds/{{charmname}}
 else
-    juju deploy -m {{controller}}:test-$BUILD_NUMBER \
+    juju deploy -m {{controller}}:test-{{charmname}}-$BUILD_NUMBER \
       /tmp/builds/{{charmname}} {{bundleappname}}
-    bundletester -e {{controller}}:test-$BUILD_NUMBER \
-      -vFt {{referencebundle}}
+    bundletester -e {{controller}}:test-{{charmname}}-$BUILD_NUMBER \
+      -vFt {{referencebundle}} --bundle bundle.yaml
 fi
 
 if [ ! -z "{{pushtochannel}}" ]
@@ -76,7 +76,7 @@ fi
     <org.jenkinsci.plugins.postbuildscript.PostBuildScript plugin="postbuildscript@0.17">
       <buildSteps>
         <hudson.tasks.Shell>
-          <command>juju destroy-model test-$BUILD_NUMBER -y</command>
+          <command>juju destroy-model test-{{charmname}}-$BUILD_NUMBER -y</command>
         </hudson.tasks.Shell>
       </buildSteps>
       <scriptOnlyIfSuccess>false</scriptOnlyIfSuccess>

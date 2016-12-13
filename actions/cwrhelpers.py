@@ -1,8 +1,13 @@
 #!/usr/bin/env python3
 
 import sys
+sys.path.append('lib')
+
 import time
 import yaml
+
+from charms.layer.basic import activate_venv
+activate_venv()
 
 from charmhelpers.core import hookenv
 from jenkins import NotFoundException
