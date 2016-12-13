@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-from jenkinshelpers import wait_result
+from cwrhelpers import wait_result
 from charmhelpers.core import hookenv
 from charms.reactive import RelationBase
 from jenkins import Jenkins
@@ -24,7 +24,7 @@ def unregister_controller():
     params = {'CONTROLLER_NAME': name}
     jclient.build_job("UnregisterController",  params)
 
-    build_outcome, build_output =  wait_result(jclient, "UnregisterController", next_build_number)
+    build_outcome, build_output = wait_result(jclient, "UnregisterController", next_build_number)
     hookenv.action_set({'outcome': build_outcome})
     hookenv.action_set({"output": build_output})
     call(["hooks/update-status"])

@@ -54,10 +54,13 @@ juju add-model test-$BUILD_NUMBER
 
 if [ -z "{{referencebundle}}"]
 then
-    bundletester -e {{controller}}:test-$BUILD_NUMBER -vFt /tmp/builds/{{charmname}}
+    bundletester -e {{controller}}:test-$BUILD_NUMBER \
+      -vFt /tmp/builds/{{charmname}}
 else
-    juju deploy /tmp/builds/{{charmname}}
-    bundletester -e {{controller}}:test-$BUILD_NUMBER -vFt {{referencebundle}}
+    juju deploy -m {{controller}}:test-$BUILD_NUMBER \
+      /tmp/builds/{{charmname}} {{bundleappname}}
+    bundletester -e {{controller}}:test-$BUILD_NUMBER \
+      -vFt {{referencebundle}}
 fi
 
 if [ ! -z "{{pushtochannel}}" ]

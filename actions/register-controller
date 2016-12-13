@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-from jenkinshelpers import wait_result
+from cwrhelpers import wait_result
 from charmhelpers.core import hookenv
 from charms.reactive import RelationBase
 from jenkins import Jenkins, NotFoundException

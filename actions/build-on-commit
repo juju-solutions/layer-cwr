@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
+
 from charmhelpers.core import hookenv
 from charms.reactive import RelationBase
+from cwrhelpers import app_from_bundle, fail_action
 from jenkins import Jenkins
 
 
@@ -15,12 +17,22 @@ def add_job():
                       jenkins_connection_info["admin_username"],
                       jenkins_connection_info["admin_password"])
 
+    # If we have a reference bundle, determine the app name used for our charm
+    charm_name = hookenv.action_get("charm-name")
+    if hookenv.action_get("reference-bundle"):
+        bundle_name = hookenv.action_get("reference-bundle")
+        bundle_app_name = app_from_bundle(bundle_name, charm_name)
+
+        if not bundle_app_name:
+            fail_action("{} not found in {}".format(charm_name, bundle_name))
+
     rep = {"{{gitrepo}}": hookenv.action_get("repo"),
            "{{pushtochannel}}": hookenv.action_get("push-to-channel"),
            "{{lpid}}": hookenv.action_get("lp-id"),
            "{{branch}}": hookenv.action_get("branch"),
-           "{{charmname}}": hookenv.action_get("charm-name"),
-           "{{referencebundle}}": hookenv.action_get("reference-bundle"),
+           "{{charmname}}": charm_name,
+           "{{referencebundle}}": bundle_name or "",
+           "{{bundleappname}}": bundle_app_name or "",
            "{{refspec}}": "",
            "{{controller}}": hookenv.action_get("controller")}
 
