@@ -1,4 +1,3 @@
-from io import open
 from jenkins import Jenkins
 from jujubigdata import utils
 from subprocess import Popen, call

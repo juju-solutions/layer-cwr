@@ -1,4 +1,3 @@
-from io import open
 from json import dumps
 from flask import Flask, request
 from jenkins import Jenkins
