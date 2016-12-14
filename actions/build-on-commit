@@ -41,9 +41,10 @@ def add_job():
            "{{lpid}}": hookenv.action_get("lp-id") or "",
            "{{branch}}": hookenv.action_get("branch"),
            "{{charmname}}": charm_name,
-           "{{referencebundle}}": bundle_name or "",
+           "{{referencebundle}}": "cs:{}".format(bundle_name) or "",
            "{{bundleappname}}": bundle_app_name or "",
            "{{refspec}}": "",
+           "{{series}}": hookenv.action_get("series") or "",
            "{{controller}}": hookenv.action_get("controller")}
 
     template_path_source = "templates/BuildMyCharm/config.xml"

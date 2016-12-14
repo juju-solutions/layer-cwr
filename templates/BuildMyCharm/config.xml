@@ -47,25 +47,33 @@ if [ ! -f "first-run.lock" ]; then
 fi
 
 export JUJU_REPOSITORY=&quot;/tmp/&quot;
-charm build
+OUTPUT_DIR="builds"
+SERIES_FLAG=""
+if [ ! -z "{{series}}" ]
+then
+    OUTPUT_DIR="{{series}}"
+    SERIES_FLAG="--series {{series}}"
+fi
+
+charm build $SERIES_FLAG
 
 juju switch {{controller}}
 juju add-model test-{{charmname}}-$BUILD_NUMBER
 
-if [ -z "{{referencebundle}}"]
+if [ -z "{{referencebundle}}" ]
 then
     bundletester -e {{controller}}:test-{{charmname}}-$BUILD_NUMBER \
-      -vFt /tmp/builds/{{charmname}}
+      -vFt /tmp/$OUTPUT_DIR/{{charmname}}
 else
     juju deploy -m {{controller}}:test-{{charmname}}-$BUILD_NUMBER \
-      /tmp/builds/{{charmname}} {{bundleappname}}
+      /tmp/$OUTPUT_DIR/{{charmname}} {{bundleappname}} $SERIES_FLAG
     bundletester -e {{controller}}:test-{{charmname}}-$BUILD_NUMBER \
       -vFt {{referencebundle}} --bundle bundle.yaml
 fi
 
 if [ ! -z "{{pushtochannel}}" ]
 then
-     CHARM_LOCATION=`charm push /tmp/builds/{{charmname}} cs:~{{lpid}}/{{charmname}} | head -1 | awk '{print $2}'`
+     CHARM_LOCATION=`charm push /tmp/$OUTPUT_DIR/{{charmname}} cs:~{{lpid}}/{{charmname}} | head -1 | awk '{print $2}'`
      charm release $CHARM_LOCATION --channel={{pushtochannel}}
      charm grant $CHARM_LOCATION everyone --channel={{pushtochannel}}
 fi

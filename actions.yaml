@@ -27,6 +27,10 @@ build-on-commit:
             description: Branch to build.
             type: string
             default: "*/master"
+        series:
+            description: Series (eg xenial, trusty) if not specified by the charm.
+            type: string
+            default: ""
     required: ['charm-name', 'repo', 'controller']
 build-on-release:
     description: Add a job that would build a charm upon release.
@@ -53,6 +57,10 @@ build-on-release:
         lp-id:
             description: Launchpad ID (namespace) under which the charm will be uploaded.
             type: string
+        series:
+            description: Series (eg xenial, trusty) if not specified by the charm.
+            type: string
+            default: ""
     required: ['charm-name', 'repo', 'controller']
 store-login:
     description: Initialise session with the Juju store.
