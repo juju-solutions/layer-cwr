@@ -154,11 +154,13 @@ def controllers_updated():
 
 
 def inform_client(client):
+    api_path = '/ci/v1.0'
     controllers = helpers.get_controllers()
     if len(controllers) == 0 or not is_state('jenkins.available'):
         client.clear_ready()
     else:
-        client.set_ready(5000, controllers)
+        client.set_ready(port=5000, api_path=api_path,
+                         controllers=controllers)
 
 
 def wait_for_plugin(plugin, wait_for_secs=300):
