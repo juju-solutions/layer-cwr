@@ -1,0 +1,287 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<project>
+  <actions/>
+  <description></description>
+  <keepDependencies>false</keepDependencies>
+  <properties/>
+  <scm class="hudson.scm.NullSCM"/>
+  <canRoam>true</canRoam>
+  <disabled>false</disabled>
+  <blockBuildWhenDownstreamBuilding>false</blockBuildWhenDownstreamBuilding>
+  <blockBuildWhenUpstreamBuilding>false</blockBuildWhenUpstreamBuilding>
+  <triggers>
+    <hudson.triggers.SCMTrigger>
+      <spec>*/10 * * * *</spec>
+      <ignorePostCommitHooks>false</ignorePostCommitHooks>
+    </hudson.triggers.SCMTrigger>
+  </triggers>
+  <concurrentBuild>false</concurrentBuild>
+  <builders>
+    <hudson.tasks.Shell>
+      <command>#!/usr/bin/env python3
+
+import sys
+import os
+import subprocess
+import shutil
+import yaml
+import re
+import hashlib
+import tempfile
+import logging
+
+
+class Bundle:
+
+    def __init__(self, repo, ci_info_file=None, BT_dry_run=False, store_push_dry_run=False):
+        self.tempdir = tempfile.mkdtemp()
+        subprocess.check_output([&quot;git&quot;, &quot;clone&quot;, repo, &quot;{}/&quot;.format(self.tempdir)])
+        with open(&quot;{}/bundle.yaml&quot;.format(self.tempdir), &apos;r+&apos;) as stream:
+            self.bundle = yaml.safe_load(stream)
+
+        if ci_info_file:
+            with open(ci_info_file, &apos;r+&apos;) as stream:
+                self.ci_info = yaml.safe_load(stream)
+        elif os.path.isfile(&quot;{}/ci-info.yaml&quot;.format(self.tempdir)):
+            with open(&quot;{}/ci-info.yaml&quot;.format(self.tempdir), &apos;r+&apos;) as stream:
+                self.ci_info = yaml.safe_load(stream)
+        else:
+            self.ci_info = dict() # or load some default ci_info
+
+        self.localtion = &quot;cs:~{}/{}&quot;.format(self.ci_info[&apos;bundle&apos;][&apos;namespace&apos;], self.ci_info[&apos;bundle&apos;][&apos;name&apos;])
+        self.upgraded = False
+        self.signature_file = &quot;last_bundle.signature&quot;
+        if BT_dry_run:
+            self.BT_command = [&quot;echo&quot;, &quot;bundletester&quot;]
+        else:
+            self.BT_command = [&quot;bundletester&quot;]
+
+        if store_push_dry_run:
+            self.charm_command = [&quot;echo&quot;, &quot;charm&quot;]
+        else:
+            self.charm_command = [&quot;charm&quot;]
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, exc_type, exc_value, traceback):
+        shutil.rmtree(self.tempdir)
+
+    def get_charms(self):
+        charms = []
+        services = self.bundle[&apos;services&apos;].values()
+        for service in services:
+            charms.append(service[&apos;charm&apos;])
+        return charms
+
+    def get_charms_upgrade_policy(self, charm_name):
+        if charm_name in self.ci_info[&apos;charm-upgrade&apos;].keys():
+            return self.ci_info[&apos;charm-upgrade&apos;][charm_name]
+        else:
+            return None
+
+    def upgrade(self, charm, new_revision):
+        services = self.bundle[&apos;services&apos;].values()
+        for service in services:
+            if service[&apos;charm&apos;] == charm and service[&apos;charm&apos;] != new_revision:
+                service[&apos;charm&apos;] = new_revision
+                self.upgraded = True
+                with open(&quot;{}/bundle.yaml&quot;.format(self.tempdir), &apos;w&apos;) as fp:
+                    yaml.dump(self.bundle, fp)
+
+    def upgradable(self):
+        return self.upgraded
+
+    def should_trigger_build(self):
+        if not self.upgradable():
+            return False
+
+        # Bundle is upgradable from here on
+        if not os.path.isfile(self.signature_file):
+            self.store_signature()
+            return True
+        else:
+            last_digest = self.get_last_signature()
+            current_digest = self.get_current_signature()
+            if last_digest != current_digest:
+                self.store_signature()
+                return True
+            else:
+                return False
+
+    def get_current_signature(self):
+        with open(&quot;temp_bundle.yaml&quot;, &apos;w&apos;) as fp:
+            yaml.dump(self.bundle, fp)
+
+        sha1 = hashlib.sha1()
+        with open(&quot;temp_bundle.yaml&quot;, &apos;rb&apos;) as f:
+            data = f.read()
+            sha1.update(data)
+        return sha1.hexdigest()
+
+    def get_last_signature(self):
+        with open(self.signature_file, &apos;r&apos;) as fp:
+            digest = fp.read()
+        return digest
+
+    def store_signature(self):
+        digest = self.get_current_signature()
+        with open(self.signature_file, &apos;w&apos;) as f:
+            f.write(digest)
+        return digest
+
+    def test(self, model):
+        cmd = [&quot;juju&quot;, &quot;switch&quot;, &quot;{{controller}}&quot;]
+        subprocess.check_output(cmd)
+        build_number = os.environ['BUILD_NUMBER']
+        cmd = [&quot;juju&quot;, &quot;add-model&quot;, &quot;test-{{bundlename}}-{}&quot;.format(build_number)]
+        subprocess.check_output(cmd)
+        cmd = list(self.BT_command)
+        cmd += [&quot;-vFt&quot;, self.tempdir]
+        cmd += [&quot;-e&quot;, model]
+        cmd += [&quot;-e&quot;, model]
+        cmd += [&quot;--bundle&quot;, &quot;bundle.yaml&quot;]
+        subprocess.check_output(cmd)
+
+    def release(self):
+        if not self.ci_info[&apos;bundle&apos;][&apos;release&apos;]:
+            return False
+
+        cmd = list(self.charm_command)
+        cmd += [&quot;push&quot;, self.tempdir, self.localtion]
+        cmd += [&quot;--channel&quot;, self.ci_info[&apos;bundle&apos;][&apos;to-channel&apos;]]
+        output = subprocess.check_output(cmd)
+        logging.warning(&quot;During release, calling {} with output {}&quot;.format(cmd, output))
+
+        output = subprocess.check_output([&quot;charm&quot;, &quot;show&quot;, self.localtion, &quot;-c&quot;, self.ci_info[&apos;bundle&apos;][&apos;to-channel&apos;], &quot;id&quot;])
+        logging.warning(&quot;During release, just released {}&quot;.format(output))
+        latest = yaml.safe_load(output)
+        just_released = latest[&apos;id&apos;][&apos;Id&apos;]
+
+        cmd = list(self.charm_command)
+        cmd += [&quot;grant&quot;, just_released]
+        cmd += [&quot;everyone&quot;]
+        output = subprocess.check_output(cmd)
+        logging.warning(&quot;During release, grant to everyone with {} and output {}&quot;.format(cmd, output))
+
+        return True
+
+
+
+class Charm:
+
+    def __init__(self, charm_name, store_push_dry_run=False):
+        self.provided_name = charm_name
+        self.name_no_namespace = charm_name[charm_name.rfind(&apos;/&apos;)+1:]
+        m = re.search(r&apos;\-\d+$&apos;, self.name_no_namespace)
+        # if the string ends in digits m will be a Match object, or None otherwise.
+        self.name = self.name_no_namespace
+        self.name_no_revision = charm_name
+        if m is not None:
+            self.name = self.name[:len(self.name) - len(m.group())]
+            self.name_no_revision = charm_name[:len(charm_name) - len(m.group())]
+
+        if store_push_dry_run:
+            self.charm_command = [&quot;echo&quot;, &quot;charm&quot;]
+        else:
+            self.charm_command = [&quot;charm&quot;]
+
+    def get_latest(self, channel):
+        output = subprocess.check_output([&quot;charm&quot;, &quot;show&quot;, self.name_no_revision, &quot;-c&quot;, channel, &quot;id&quot;])
+        latest = yaml.safe_load(output)
+        return latest[&apos;id&apos;][&apos;Id&apos;]
+
+    def get_name(self):
+        return self.name
+
+    def get_namespace_name(self):
+        return self.name_no_revision
+
+    def get_namespace_name_revision(self):
+        return self.provided_name
+
+    def release_latest(self, from_channel, to_channel):
+        latest = self.get_latest(from_channel)
+        cmd = list(self.charm_command)
+        cmd += [&quot;release&quot;, latest]
+        cmd += [&quot;--channel&quot;, to_channel]
+        subprocess.check_output(cmd)
+        latest_just_released = self.get_latest(to_channel)
+        cmd = list(self.charm_command)
+        cmd += [&quot;grant&quot;, latest_just_released]
+        cmd += [&quot;everyone&quot;]
+        subprocess.check_output(cmd)
+
+
+class Tester:
+
+    def __init__(self, BT_dry_run=False, store_push_dry_run=False):
+        self.BT_dry_run = BT_dry_run
+        self.store_push_dry_run = store_push_dry_run
+
+    def check_bundle(self, repo):
+        with Bundle(repo, &quot;ci-info.yaml&quot;, self.BT_dry_run, self.store_push_dry_run) as bundle:
+            print(&quot;Checking {}&quot;.format(repo))
+            charms = bundle.get_charms()
+            print(&quot;{}&quot;.format(charms))
+            for charm in charms:
+                c = Charm(charm)
+                print(&quot;{}&quot;.format(c.get_name()))
+                print(&quot;Latest {}&quot;.format(c.get_latest(&quot;stable&quot;)))
+                upgrade_info = bundle.get_charms_upgrade_policy(c.get_name())
+                if upgrade_info:
+                    print(&quot;Upgrading {}&quot;.format(charm))
+                    print(&quot;Upgrading info {}&quot;.format(upgrade_info))
+                    bundle.upgrade(charm, c.get_latest(upgrade_info[&quot;from-channel&quot;]))
+            if not bundle.upgradable():
+                print(&quot;Not upgradable&quot;)
+                return False
+            else:
+                print(&quot;Upgraded&quot;)
+                if bundle.should_trigger_build():
+                    print(&quot;Should trigger build&quot;)
+                    return True
+                else:
+                    return False
+
+    def test_and_release_bundle(self, repo, model):
+        with Bundle(repo, &quot;ci-info.yaml&quot;, self.BT_dry_run, self.store_push_dry_run) as bundle:
+            print(&quot;Checking {}&quot;.format(repo))
+            charms = bundle.get_charms()
+            print(&quot;{}&quot;.format(charms))
+            for charm in charms:
+                c = Charm(charm)
+                print(&quot;{}&quot;.format(c.get_name()))
+                print(&quot;Latest {}&quot;.format(c.get_latest(&quot;stable&quot;)))
+                upgrade_info = bundle.get_charms_upgrade_policy(c.get_name())
+                if upgrade_info:
+                    print(&quot;Upgrading {}&quot;.format(charm))
+                    print(&quot;Upgrading info {}&quot;.format(upgrade_info))
+                    bundle.upgrade(charm, c.get_latest(upgrade_info[&quot;from-channel&quot;]))
+            bundle.test(model)
+            bundle.release()
+            for charm in charms:
+                c = Charm(charm)
+                print(&quot;{}&quot;.format(c.get_name()))
+                print(&quot;Latest {}&quot;.format(c.get_latest(&quot;stable&quot;)))
+                upgrade_info = bundle.get_charms_upgrade_policy(c.get_name())
+                if upgrade_info and upgrade_info[&apos;release&apos;]:
+                    print(&quot;Upgrading {}&quot;.format(charm))
+                    print(&quot;Upgrading info {}&quot;.format(upgrade_info))
+                    c.release_latest(upgrade_info[&apos;from-channel&apos;], upgrade_info[&apos;to-channel&apos;])
+
+
+operation = {{operation}}
+tester = Tester(BT_dry_run=True, store_push_dry_run=True)
+if operation == &quot;check&quot;:
+    tester.check_bundle({{repo}})
+else:
+    tester.test_and_release_bundle({{repo}}, {{model}})
+</command>
+    </hudson.tasks.Shell>
+  </builders>
+  <publishers>
+{{postbuild}}
+  </publishers>
+  <buildWrappers/>
+</project>

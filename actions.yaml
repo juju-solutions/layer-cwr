@@ -1,3 +1,16 @@
+build-bundle:
+    description: Build and release bundle.
+    params:
+        repo:
+            description: Git repository.
+            type: string
+        bundle-name:
+            description: Name of the bundle.
+            type: string
+        controller:
+            description: Name of controller to be used.
+            type: string
+    required: ['repo']
 build-on-commit:
     description: Add a job job that would build a charm upon commit.
     params:
