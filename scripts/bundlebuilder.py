@@ -13,9 +13,9 @@ import logging
 
 class Bundle:
 
-    def __init__(self, repo, ci_info_file=None, BT_dry_run=False, store_push_dry_run=False):
+    def __init__(self, repo, branch, ci_info_file=None, BT_dry_run=False, store_push_dry_run=False):
         self.tempdir = tempfile.mkdtemp()
-        subprocess.check_output(["git", "clone", repo, "{}/".format(self.tempdir)])
+        subprocess.check_output(["git", "clone", repo, "--branch", branch, "{}/".format(self.tempdir)])
         with open("{}/bundle.yaml".format(self.tempdir), 'r+') as stream:
             self.bundle = yaml.safe_load(stream)
 
@@ -114,7 +114,6 @@ class Bundle:
         cmd = list(self.BT_command)
         cmd += ["-vFt", self.tempdir]
         cmd += ["-e", model]
-        cmd += ["-e", model]
         cmd += ["--bundle", "bundle.yaml"]
         subprocess.check_output(cmd)
 
@@ -194,8 +193,10 @@ class Tester:
         self.BT_dry_run = BT_dry_run
         self.store_push_dry_run = store_push_dry_run
 
-    def check_bundle(self, repo):
-        with Bundle(repo, "ci-info.yaml", self.BT_dry_run, self.store_push_dry_run) as bundle:
+    def check_bundle(self, repo, branch):
+        with Bundle(repo, branch,
+                    BT_dry_run=self.BT_dry_run,
+                    store_push_dry_run=self.store_push_dry_run) as bundle:
             print("Checking {}".format(repo))
             charms = bundle.get_charms()
             print("{}".format(charms))
@@ -219,8 +220,10 @@ class Tester:
                 else:
                     return False
 
-    def test_and_release_bundle(self, repo, model):
-        with Bundle(repo, "ci-info.yaml", self.BT_dry_run, self.store_push_dry_run) as bundle:
+    def test_and_release_bundle(self, repo, branch, model):
+        with Bundle(repo, branch,
+                    BT_dry_run=self.BT_dry_run,
+                    store_push_dry_run=self.store_push_dry_run) as bundle:
             print("Checking {}".format(repo))
             charms = bundle.get_charms()
             print("{}".format(charms))
@@ -246,9 +249,17 @@ class Tester:
                     c.release_latest(upgrade_info['from-channel'], upgrade_info['to-channel'])
 
 
-operation = {{operation}}
-tester = Tester(BT_dry_run=True, store_push_dry_run=True)
-if operation == "check":
-    tester.check_bundle({{repo}})
-else:
-    tester.test_and_release_bundle({{repo}}, {{model}})
+if __name__ == "__main__":
+    operation = sys.argv[1]
+    repo = sys.argv[2]
+    branch = sys.argv[3]
+    tester = Tester()
+    if operation == "check":
+        if tester.check_bundle(repo, branch):
+            sys.exit(0)
+        else:
+            sys.exit(1)
+    else:
+        model = sys.argv[4]
+        tester.test_and_release_bundle(repo, branch, model)
+        sys.exit(0)
