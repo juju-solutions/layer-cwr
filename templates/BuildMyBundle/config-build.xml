@@ -14,14 +14,6 @@
   <builders>
     <hudson.tasks.Shell>
       <command>
-if [ ! -f &quot;first-run.lock&quot; ]; then
-  touch &quot;first-run.lock&quot;
-  echo &quot;First run automaticaly triggered. Skipped.&quot;
-  exit 0
-fi
-
-exit 0
-
 juju switch {{controller}}
 juju add-model test-{{bundlename}}-$BUILD_NUMBER
 
