@@ -155,12 +155,14 @@ def controllers_updated():
 
 def inform_client(client):
     controllers = helpers.get_controllers()
+    token = helpers.get_charmstore_token()
     if len(controllers) == 0 or not is_state('jenkins.available'):
         client.clear_ready()
     else:
         client.set_controllers(controllers)
         client.set_port(helpers.REST_PORT)
         client.set_rest_prefix(helpers.REST_PREFIX)
+        client.set_store_token(token)  # token may be empty; client will verify
         client.set_ready()
 
 
