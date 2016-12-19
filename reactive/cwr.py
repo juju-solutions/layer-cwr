@@ -1,4 +1,5 @@
 import os
+from tempfile import TemporaryDirectory
 import time
 from charmhelpers import fetch
 from charmhelpers.core import host, hookenv
@@ -26,6 +27,13 @@ def install_juju():
     # bt/cwr are not py3 compatible yet (hence not in the wheelhouse)
     utils.run_as('root', 'pip2', 'install',
                  'bundletester', 'cloud-weather-report')
+    # install matrix
+    with TemporaryDirectory() as tmpdir:
+        utils.run_as('root', 'git', 'clone',
+                     'https://github.com/juju-solutions/matrix',
+                     tmpdir)
+        utils.run_as('root', 'pip3', 'install', tmpdir,
+                     '--no-index', '-f', os.path.join(tmpdir, 'wheelhouse'))
 
     # Make user jenkins parametrised. And this action as well
     with open("/etc/sudoers", "a") as sudoers:

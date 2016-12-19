@@ -14,11 +14,25 @@ from theblues.charmstore import CharmStore  # noqa: E402
 from theblues.errors import EntityNotFound, ServerError  # noqa: E402
 
 
+class InvalidBundle(Exception):
+    def __init__(self, name, reason):
+        self.name = name
+        self.reason = reason
+
+    def __str__(self):
+        return 'Invalid bundle: {}'.format(self.name)
+
+
 def app_from_bundle(bundle_name, charm_name):
     '''Return the app name used in the given bundle for a given charm.'''
-    cs = CharmStore()
-    bundle_yaml = cs.files(bundle_name, filename='bundle.yaml', read_file=True)
-    yaml_contents = yaml.safe_load(bundle_yaml)
+    try:
+        cs = CharmStore()
+        bundle_yaml = cs.files(bundle_name,
+                               filename='bundle.yaml',
+                               read_file=True)
+        yaml_contents = yaml.safe_load(bundle_yaml)
+    except (EntityNotFound, ServerError, yaml.YAMLError) as e:
+        raise InvalidBundle(bundle_name, str(e))
     for app, app_config in yaml_contents['services'].items():
         if charm_name in app_config['charm']:
             return app
@@ -57,7 +71,9 @@ def get_reference_bundle():
         bundle_app_name = app_from_bundle(bundle_name, charm_name)
 
         if not bundle_app_name:
-            fail_action("{} not found in {}".format(charm_name, bundle_name))
+            raise InvalidBundle(
+                bundle_name,
+                "Charm not found in bundle: {}".format(charm_name))
         return bundle_name, bundle_app_name
     else:
         return "", ""
