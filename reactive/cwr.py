@@ -18,6 +18,29 @@ from CIGateway import CIGateway
 from controller import helpers
 
 
+def report_status():
+    if not is_state('jenkins.available'):
+        hookenv.status_set('waiting', 'waiting for jenkins to become available')
+        return
+
+    # jenkins.available is set from here on
+    if not is_state('jenkins.jobs.ready'):
+        hookenv.status_set('waiting', 'waiting for jenkins jobs to be uploaded')
+        return
+
+    # jenkins.available and jenkins.jobs.ready are set from here on
+    controllers = helpers.get_controllers()
+    if len(controllers) == 0:
+        hookenv.status_set('blocked', 'waiting for controller registration')
+        return
+
+    # jenkins.available and jenkins.jobs.ready and controllers > 0 from here on
+    if helpers.get_charmstore_token():
+        hookenv.status_set('active', 'ready')
+    else:
+        hookenv.status_set('active', 'ready (not authenticated to charm store)')
+
+
 @when_not('juju-ci-env.installed')
 def install_juju():
     hookenv.status_set('maintenance', 'installing juju')
@@ -81,6 +104,7 @@ def install_jenkins_jobs(connected_jenkins):
                     jenkins_connection_info["admin_username"],
                     jenkins_connection_info["admin_password"])
     set_state("jenkins.jobs.ready")
+    hookenv.open_port(helpers.REST_PORT)
     report_status()
 
 
@@ -103,12 +127,14 @@ def cleanup_jenkins():
 
     CIGateway.stop()
     remove_state("jenkins.jobs.ready")
+    hookenv.close_port(helpers.REST_PORT)
     report_status()
 
 
 @when('ci-client.joined')
 def client_joined(client):
     inform_client(client)
+    report_status()
 
 
 @when_not('jenkins.available')
@@ -131,26 +157,6 @@ def ci_connection_updated(jenkins, jenkins_changed):
     report_status()
 
 
-def report_status():
-    if not is_state('jenkins.available'):
-        hookenv.status_set('waiting', 'wait for jenkins to become available')
-        return
-
-    # jenkins.available is set from here on
-    if not is_state('jenkins.jobs.ready'):
-        hookenv.status_set('waiting', 'waiting jobs to be uploaded to jenkins')
-        return
-
-    # jenkins.available and jenkins.jobs.ready are set from here on
-    controllers = helpers.get_controllers()
-    if len(controllers) == 0:
-        hookenv.status_set('blocked', 'waiting for controller registration')
-        return
-
-    # jenkins.available and jenkins.jobs.ready and controllers > 0 from here on
-    hookenv.status_set('active', 'ready')
-
-
 @when_file_changed(helpers.CONTROLLERS_LIST_FILE)
 def controllers_updated():
     hookenv.log("Contorllers file has changed")
@@ -162,13 +168,16 @@ def controllers_updated():
 
 
 def inform_client(client):
-    api_path = '/ci/v1.0'
     controllers = helpers.get_controllers()
+    token = helpers.get_charmstore_token()
     if len(controllers) == 0 or not is_state('jenkins.available'):
         client.clear_ready()
     else:
-        client.set_ready(port=5000, api_path=api_path,
-                         controllers=controllers)
+        client.set_controllers(controllers)
+        client.set_port(helpers.REST_PORT)
+        client.set_rest_prefix(helpers.REST_PREFIX)
+        client.set_store_token(token)  # token may be empty; client will verify
+        client.set_ready()
 
 
 def wait_for_plugin(plugin, wait_for_secs=300):

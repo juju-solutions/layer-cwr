@@ -22,9 +22,9 @@ def charmstore_login():
     """
     Login to the charmstore.
 
-    As long as we have an oauth token (which will be passed in via config),
+    As long as we have an oauth token (which will be passed in via this action),
     `charm login` should be non-interactive, creating/refreshing ~/.go-cookies
-    as necessary. (shamelessly stolen from review-queue charm)
+    as necessary. (shamelessly stolen from review-queue app)
     """
     token_path = "{}/.local/share/juju/store-usso-token".format(HOME)
     if not os.path.exists(token_path):

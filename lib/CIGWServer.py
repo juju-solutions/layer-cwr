@@ -1,9 +1,10 @@
 from json import dumps
 from flask import Flask, request
 from jenkins import Jenkins
-from controller.helpers import get_controllers
+from controller.helpers import REST_PORT, get_controllers, get_rest_path
 
 app = Flask(__name__)
+rest_path = get_rest_path()
 
 
 @app.route("/ping")
@@ -14,13 +15,13 @@ def ping():
 #
 # Controller operations: list, register, unregister
 #
-@app.route("/ci/v1.0/controllers")
+@app.route(rest_path + "/controllers")
 def list_controllers():
     controllers = get_controllers()
     return dumps(controllers)
 
 
-@app.route("/ci/v1.0/controllers/add/<string:name>")
+@app.route(rest_path + "/controllers/add/<string:name>")
 def add_controller(name):
     job = "RegisterController"
     token = request.args.get("token")
@@ -32,7 +33,7 @@ def add_controller(name):
     return str(next_build_number)
 
 
-@app.route("/ci/v1.0/controllers/remove/<string:name>")
+@app.route(rest_path + "/controllers/remove/<string:name>")
 def remove_controller(name):
     job = "UnregisterController"
     jclient = get_jenkins_client()
@@ -45,14 +46,14 @@ def remove_controller(name):
 #
 # Job Status and Output
 #
-@app.route("/ci/v1.0/build/<string:job_name>/<int:build_id>")
+@app.route(rest_path + "/build/<string:job_name>/<int:build_id>")
 def get_build_info(job_name, build_id):
     jclient = get_jenkins_client()
     build_info = jclient.get_build_info(job_name, build_id)
     return dumps(build_info, sort_keys=True, separators=(',', ': '))
 
 
-@app.route("/ci/v1.0/build-output/<string:job_name>/<int:build_id>")
+@app.route(rest_path + "/build-output/<string:job_name>/<int:build_id>")
 def get_build_output(job_name, build_id):
     jclient = get_jenkins_client()
     build_info = jclient.get_build_console_output(job_name, build_id)
@@ -62,7 +63,7 @@ def get_build_output(job_name, build_id):
 #
 # RunCWR Jenkins Job
 #
-@app.route("/ci/v1.0/trigger/job/RunCwr")
+@app.route(rest_path + "/trigger/job/RunCwr")
 def trigger_job():
     job = "RunCwr"
     controller = request.args.get("controller")
@@ -89,4 +90,4 @@ def get_jenkins_client():
 
 
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=5000)
+    app.run(host="0.0.0.0", port=REST_PORT)
