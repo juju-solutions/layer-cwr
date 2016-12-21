@@ -1,10 +1,23 @@
 from json import dumps
-from flask import Flask, request
+from flask import Flask, request, abort
 from jenkins import Jenkins
 from controller.helpers import REST_PORT, get_controllers, get_rest_path
+from pathlib import Path
+import mimetypes
+import logging
+
+logging.basicConfig(filename='/var/log/cwr-server/cwr-server.log',
+                    level=logging.INFO)
 
 app = Flask(__name__)
 rest_path = get_rest_path()
+
+
+def json_response(data):
+    return (
+        dumps(data, sort_keys=True, separators=(',', ': ')),
+        {'Content-Type': 'application/json'},
+    )
 
 
 @app.route("/ping")
@@ -60,6 +73,19 @@ def get_build_output(job_name, build_id):
     return dumps(build_info, sort_keys=True, separators=(',', ': '))
 
 
+@app.route("/ci/v1.0/build-artifacts/<string:job_name>/<int:build_id>/")
+@app.route("/ci/v1.0/build-artifacts/<string:job_name>/<int:build_id>/"
+           "<string:filename>")
+def get_build_artifact(job_name, build_id, filename=None):
+    charm_name = build_id[len('charm-'):]
+    if filename:
+        return frontend('/'.join([charm_name, build_id, filename]))
+    else:
+        files = [p.name for p in
+                 (Path('/srv/artifacts') / charm_name / build_id).iterdir()]
+        return json_response(files)
+
+
 #
 # RunCWR Jenkins Job
 #
@@ -77,6 +103,30 @@ def trigger_job():
               'BUILD_CHARM_TARGET': build_target}
     jclient.build_job("RunCwr",  params)
     return str(next_build_number)
+
+
+@app.route("/")
+@app.route("/<path:filepath>")
+def frontend(filepath=None):
+    """
+    This serves the CWR pages directly, and is intended as the end-user view.
+
+    Note that it must come last as it has a catch-all path argument that would
+    conflict with the API views.
+    """
+    if not filepath:
+        filepath = 'index.html'
+    fullpath = Path('/srv/artifacts') / filepath
+    if not fullpath.is_file():
+        abort(404)
+    fullpath = fullpath.resolve()
+    if not str(fullpath).startswith('/srv/artifacts/'):
+        abort(404)
+    content_type, _ = mimetypes.guess_type(filepath)
+    if not content_type:
+        content_type = 'application/octet-stream'
+    contents = fullpath.read_bytes()
+    return contents, {'Content-Type': content_type}
 
 
 def get_jenkins_client():

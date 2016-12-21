@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 
+import re
 import sys
 import time
 import yaml
@@ -74,9 +75,10 @@ def get_reference_bundle():
             raise InvalidBundle(
                 bundle_name,
                 "Charm not found in bundle: {}".format(charm_name))
-        return bundle_name, bundle_app_name
+        bundle_fname = re.sub(r'[^a-zA-Z0-9]', '_', bundle_name)
+        return bundle_name, bundle_fname, bundle_app_name
     else:
-        return "", ""
+        return "", "", ""
 
 
 def fail_action(msg, output=None):

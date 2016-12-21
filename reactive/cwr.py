@@ -1,4 +1,5 @@
 import os
+from pathlib import Path
 from tempfile import TemporaryDirectory
 import time
 from charmhelpers import fetch
@@ -20,25 +21,40 @@ from controller import helpers
 
 def report_status():
     if not is_state('jenkins.available'):
-        hookenv.status_set('waiting', 'waiting for jenkins to become available')
+        hookenv.status_set('waiting',
+                           'waiting for jenkins to become available')
         return
 
     # jenkins.available is set from here on
     if not is_state('jenkins.jobs.ready'):
-        hookenv.status_set('waiting', 'waiting for jenkins jobs to be uploaded')
+        hookenv.status_set('waiting',
+                           'waiting for jenkins jobs to be uploaded')
         return
 
     # jenkins.available and jenkins.jobs.ready are set from here on
     controllers = helpers.get_controllers()
     if len(controllers) == 0:
-        hookenv.status_set('blocked', 'waiting for controller registration')
+        hookenv.status_set('blocked',
+                           'waiting for controller registration')
         return
 
     # jenkins.available and jenkins.jobs.ready and controllers > 0 from here on
     if helpers.get_charmstore_token():
-        hookenv.status_set('active', 'ready')
+        hookenv.status_set('active',
+                           'ready')
     else:
-        hookenv.status_set('active', 'ready (not authenticated to charm store)')
+        hookenv.status_set('active',
+                           'ready (not authenticated to charm store)')
+
+
+def pip_install_from_git(version, wheelhouse, repo):
+    with TemporaryDirectory() as tmpdir:
+        utils.run_as('root', 'git', 'clone', repo, tmpdir)
+        install_cmd = ['root', 'pip%s' % version, 'install', tmpdir]
+        if wheelhouse:
+            install_cmd.extend(
+                ['--no-index', '-f', os.path.join(tmpdir, 'wheelhouse')])
+        utils.run_as(*install_cmd)
 
 
 @when_not('juju-ci-env.installed')
@@ -48,19 +64,28 @@ def install_juju():
     fetch.apt_update()
     fetch.apt_install(["juju", "charm-tools"])
     # bt/cwr are not py3 compatible yet (hence not in the wheelhouse)
-    utils.run_as('root', 'pip2', 'install',
-                 'bundletester', 'cloud-weather-report')
-    # install matrix
-    with TemporaryDirectory() as tmpdir:
-        utils.run_as('root', 'git', 'clone',
-                     'https://github.com/juju-solutions/matrix',
-                     tmpdir)
-        utils.run_as('root', 'pip3', 'install', tmpdir,
-                     '--no-index', '-f', os.path.join(tmpdir, 'wheelhouse'))
+    utils.run_as('root', 'pip2', 'install', 'bundletester')
+    # cwr on pypi is out of date :(
+    pip_install_from_git(
+        2, False, 'https://github.com/juju-solutions/cloud-weather-report')
+    # matrix not released to pypi yet
+    pip_install_from_git(
+        3, True, 'https://github.com/juju-solutions/matrix')
+    # juju plugins (for crashdump)
+    utils.run_as('root', 'git', 'clone', 'https://github.com/juju/plugins',
+                 '/usr/local/lib/juju-plugins')
+    for plugin in Path('/usr/local/lib/juju-plugins').iterdir():
+        if plugin.name.startswith('juju-'):
+            (Path('/usr/local/bin') / plugin.name).symlink_to(plugin)
 
     # Make user jenkins parametrised. And this action as well
     with open("/etc/sudoers", "a") as sudoers:
         sudoers.write("%jenkins ALL=NOPASSWD: ALL\n")
+
+    host.chownr("/srv/artifacts",
+                owner="jenkins",
+                group="jenkins",
+                chowntopdir=True)
 
     set_state('juju-ci-env.installed')
     report_status()

@@ -33,7 +33,7 @@
   <concurrentBuild>false</concurrentBuild>
   <builders>
     <hudson.tasks.Shell>
-      <command>touch totest.yaml
+      <command>rm -f totest.yaml
 echo &quot;bundle: $BUILD_CHARM_TARGET&quot; &gt;&gt; totest.yaml
 echo &quot;bundle_name: $CHARM_NAME&quot; &gt;&gt; totest.yaml
 juju switch $CONTROLLER
@@ -50,7 +50,7 @@ else
     juju add-model test-cwr-$CHARM_NAME-$BUILD_NUMBER --credential="$credential"
 fi
 
-cwr $CONTROLLER:test-cwr-$CHARM_NAME-$BUILD_NUMBER totest.yaml
+cwr $CONTROLLER:test-cwr-$CHARM_NAME-$BUILD_NUMBER totest.yaml --results-dir /srv/artifacts --test-id $BUILD_NUMBER
 </command>
     </hudson.tasks.Shell>
   </builders>

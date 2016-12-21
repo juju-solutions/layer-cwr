@@ -25,7 +25,8 @@ def add_job():
 
     charm_name = hookenv.action_get("charm-name")
     try:
-        bundle_name, bundle_app_name = cwrhelpers.get_reference_bundle()
+        bundle_name, bundle_fname, bundle_app_name = cwrhelpers\
+                .get_reference_bundle()
     except cwrhelpers.InvalidBundle as e:
         cwrhelpers.fail_action(str(e), e.reason)
 
@@ -34,8 +35,9 @@ def add_job():
            "{{lpid}}": hookenv.action_get("lp-id") or "",
            "{{branch}}": hookenv.action_get("branch"),
            "{{charmname}}": charm_name,
-           "{{referencebundle}}": bundle_name,
-           "{{bundleappname}}": bundle_app_name,
+           "{{bundle_name}}": bundle_name,
+           "{{bundle_fname}}": bundle_fname,
+           "{{bundle_app_name}}": bundle_app_name,
            "{{refspec}}": "",
            "{{series}}": hookenv.action_get("series") or "",
            "{{controller}}": hookenv.action_get("controller")}

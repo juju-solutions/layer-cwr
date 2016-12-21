@@ -1,0 +1,16 @@
+[Unit]
+Description=CWR Server
+After=network.target
+After=systemd-user-sessions.service
+
+[Service]
+User=ubuntu
+Type=simple
+Restart=always
+WorkingDirectory={{charm_dir}}
+Environment=PYTHONPATH=${PYTHONPATH}:./lib
+Environment=FLASK_APP=./lib/CIGWServer.py
+ExecStart={{charm_dir}}/../.venv/bin/flask run -h 0.0.0.0
+
+[Install]
+WantedBy=multi-user.target
