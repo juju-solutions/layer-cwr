@@ -37,7 +37,13 @@
 echo &quot;bundle: $BUILD_CHARM_TARGET&quot; &gt;&gt; totest.yaml
 echo &quot;bundle_name: $CHARM_NAME&quot; &gt;&gt; totest.yaml
 juju switch $CONTROLLER
-juju add-model test-$BUILD_NUMBER
+
+# we have to figure out which credential to use because of:
+# https://bugs.launchpad.net/juju/+bug/1652171
+cloud=$(juju add-model wont-be-added --credential invalid-credential 2>&amp;1 | cut -d'"' -f 4)
+credential=$(juju credentials --format=json | jq -r '.credentials.'${cloud}'."cloud-credentials" | keys[0]')
+
+juju add-model test-$BUILD_NUMBER --credential="$credential"
 cwr $CONTROLLER:test-$BUILD_NUMBER totest.yaml
 </command>
     </hudson.tasks.Shell>

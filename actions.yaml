@@ -90,3 +90,11 @@ unregister-controller:
     required: ['name']
 list-controllers:
     description: List all available controllers.
+set-credentials:
+    description: Add or update credentials for a cloud
+    params:
+        cloud:
+            description: Name of cloud to update credentials for
+        credentials:
+            description: Cloud credentials as base64-encoded YAML
+            type: string
