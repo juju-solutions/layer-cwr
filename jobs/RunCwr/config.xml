@@ -37,8 +37,20 @@
 echo &quot;bundle: $BUILD_CHARM_TARGET&quot; &gt;&gt; totest.yaml
 echo &quot;bundle_name: $CHARM_NAME&quot; &gt;&gt; totest.yaml
 juju switch $CONTROLLER
-juju add-model test-$BUILD_NUMBER
-cwr $CONTROLLER:test-$BUILD_NUMBER totest.yaml
+
+# we have to figure out which credential to use because of:
+# https://bugs.launchpad.net/juju/+bug/1652171
+tryaddmodel=$(juju add-model wont-be-added --credential invalid-credential 2>&amp;1) || true
+if expr "$tryaddmodel" : '.* localhost .*'
+then
+    juju add-model test-cwr-$CHARM_NAME-$BUILD_NUMBER
+else
+    cloud=$(echo $tryaddmodel | cut -d'"' -f 4)
+    credential=$(juju credentials --format=json | jq -r '.credentials.'${cloud}'."cloud-credentials" | keys[0]')
+    juju add-model test-cwr-$CHARM_NAME-$BUILD_NUMBER --credential="$credential"
+fi
+
+cwr $CONTROLLER:test-cwr-$CHARM_NAME-$BUILD_NUMBER totest.yaml
 </command>
     </hudson.tasks.Shell>
   </builders>
@@ -46,7 +58,7 @@ cwr $CONTROLLER:test-$BUILD_NUMBER totest.yaml
       <org.jenkinsci.plugins.postbuildscript.PostBuildScript plugin="postbuildscript@0.17">
       <buildSteps>
         <hudson.tasks.Shell>
-          <command>juju destroy-model test-$BUILD_NUMBER -y</command>
+          <command>juju destroy-model test-cwr-$CHARM_NAME-$BUILD_NUMBER -y</command>
         </hudson.tasks.Shell>
       </buildSteps>
       <scriptOnlyIfSuccess>false</scriptOnlyIfSuccess>

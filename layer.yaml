@@ -4,4 +4,5 @@ options:
   basic:
     packages:
       - unzip
+      - jq
     use_venv: true

@@ -19,11 +19,18 @@ the registration token from the above `juju add-user` command.
     juju run-action cwr/0 register-controller name=<controller-name> \
         token=<registration-token>
 
-Alternatively you can login into jenkins (user admin) and build the
-`RegisterController` job. To un-register a controller, call the
-`unregister-controller` action trigger the `UnregisterController` jenkins job.
-In both cases, you need to provide the user friendly name you specified during
-controller registration.
+If you're using a cloud that requires credentials (i.e., anything other than
+the LXD provider), you will also need to provide those credentials as well,
+as base64-encoded YAML:
+
+    juju run-action cwr/0 set-credentials cloud=<cloud-name> \
+        credentials="$(base64 credentials.yaml)"
+
+You can find your credentials in `~/.local/share/juju/credentials.yaml`,
+but you may want to extract and share just the portions that will be
+used with the CI system.  In the future, Juju should provide a way to
+share access to the credentials without having to share the credentials
+themselves.
 
 To push and release build artifacts to the Juju store directly from the CI,
 you will need to initialize the session between this charm and the store. To do
@@ -38,12 +45,11 @@ token. For example:
     export TOKEN=`base64 ~/.local/share/juju/store-usso-token`
     juju run-action cwr/0 store-login charmstore-usso-token="$TOKEN"
 
-The `InitJujuStoreSession` jenkins job requires you to enter your charm store
-credentials in the Jenkins UI.
-
 The charm store session will remain active while the CI system is online. To
-terminate the session, either run the `store-logout` action or trigger the
-`LogoutFromJujuStore` job from within Jenkins.
+terminate the session, either run the `store-logout` action.
+
+Note that these actions are also available as jobs in Jenkins and can be run
+from there instead.
 
 
 # Using CWR to build your Charms
