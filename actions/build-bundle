@@ -21,7 +21,7 @@ def add_job():
     bundle_name = hookenv.action_get("bundle-name")
     branch = hookenv.action_get("branch")
     controller = hookenv.action_get("controller")
-    charm_home = "{}".format(getcwd())
+    charm_home = getcwd()
 
     rep = {"{{repo}}": repo,
            "{{bundlename}}": bundle_name,
@@ -29,6 +29,7 @@ def add_job():
            "{{branch}}": branch,
            "{{cwrcharmhome}}": charm_home}
 
+    # This job will get green if there are updates that can go to the bundle
     template_path_source = "templates/BuildMyBundle/config-check.xml"
     with open(template_path_source) as infile:
         data = infile.read()
@@ -36,6 +37,7 @@ def add_job():
             data = data.replace(src, target)
         jclient.create_job("check-bundle-{}".format(bundle_name), data)
 
+    # This job will "build" the bundle aka update, test, push to store
     template_path_source = "templates/BuildMyBundle/config-build.xml"
     with open(template_path_source) as infile:
         data = infile.read()

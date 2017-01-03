@@ -22,7 +22,7 @@ juju add-model test-{{bundlename}}-$BUILD_NUMBER
     <hudson.tasks.Shell>
       <command>
 #!/bin/sh
-python {{cwrcharmhome}}/scripts/bundlebuilder.py build {{repo}} {{branch}} {{controller}}:test-{{bundlename}}-$BUILD_NUMBER</command>
+python3 {{cwrcharmhome}}/scripts/bundlebuilder.py build {{repo}} {{branch}} {{controller}}:test-{{bundlename}}-$BUILD_NUMBER</command>
     </hudson.tasks.Shell>
   </builders>
   <publishers>

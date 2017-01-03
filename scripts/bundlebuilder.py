@@ -9,9 +9,10 @@ import re
 import hashlib
 import tempfile
 import logging
+from subprocess import Popen, PIPE, STDOUT
 
 
-class Bundle:
+class Bundle(object):
 
     def __init__(self, repo, branch, ci_info_file=None, BT_dry_run=False, store_push_dry_run=False):
         self.tempdir = tempfile.mkdtemp()
@@ -115,7 +116,8 @@ class Bundle:
         cmd += ["-vFt", self.tempdir]
         cmd += ["-e", model]
         cmd += ["--bundle", "bundle.yaml"]
-        subprocess.check_output(cmd)
+        cmd += ["-l", "DEBUG"]
+        self.execute(cmd)
 
     def release(self):
         if not self.ci_info['bundle']['release']:
@@ -140,9 +142,13 @@ class Bundle:
 
         return True
 
+    def execute(cmd):
+        with Popen(cmd, stdout=PIPE, stderr=STDOUT, bufsize=1, universal_newlines=True) as p:
+            for line in p.stdout:
+                print(line, end='')
 
 
-class Charm:
+class Charm(object):
 
     def __init__(self, charm_name, store_push_dry_run=False):
         self.provided_name = charm_name
@@ -187,7 +193,7 @@ class Charm:
         subprocess.check_output(cmd)
 
 
-class Tester:
+class Tester(object):
 
     def __init__(self, BT_dry_run=False, store_push_dry_run=False):
         self.BT_dry_run = BT_dry_run
@@ -199,16 +205,20 @@ class Tester:
                     store_push_dry_run=self.store_push_dry_run) as bundle:
             print("Checking {}".format(repo))
             charms = bundle.get_charms()
-            print("{}".format(charms))
+            print("Charms in bunlde {}".format(charms))
             for charm in charms:
                 c = Charm(charm)
-                print("{}".format(c.get_name()))
-                print("Latest {}".format(c.get_latest("stable")))
                 upgrade_info = bundle.get_charms_upgrade_policy(c.get_name())
                 if upgrade_info:
-                    print("Upgrading {}".format(charm))
+                    print("Upgrading charm {}".format(charm))
                     print("Upgrading info {}".format(upgrade_info))
+                    print("Latest revision {} in channel {}"
+                          .format(c.get_latest(upgrade_info["from-channel"]),
+                                  upgrade_info["from-channel"]))
                     bundle.upgrade(charm, c.get_latest(upgrade_info["from-channel"]))
+                else:
+                    print("Charm {} not marked for upgrade.".format(c.get_name()))
+
             if not bundle.upgradable():
                 print("Not upgradable")
                 return False
@@ -226,7 +236,7 @@ class Tester:
                     store_push_dry_run=self.store_push_dry_run) as bundle:
             print("Checking {}".format(repo))
             charms = bundle.get_charms()
-            print("{}".format(charms))
+            print("Charms in bundle {}".format(charms))
             for charm in charms:
                 c = Charm(charm)
                 print("{}".format(c.get_name()))
@@ -235,17 +245,22 @@ class Tester:
                 if upgrade_info:
                     print("Upgrading {}".format(charm))
                     print("Upgrading info {}".format(upgrade_info))
+                    print("Upgrading to revision {} of channel {}"
+                          .format(c.get_latest(upgrade_info["from-channel"]),
+                                  upgrade_info["from-channel"]))
                     bundle.upgrade(charm, c.get_latest(upgrade_info["from-channel"]))
+            print("Testing new bundle")
             bundle.test(model)
+            print("Releasing bundle")
             bundle.release()
             for charm in charms:
                 c = Charm(charm)
-                print("{}".format(c.get_name()))
-                print("Latest {}".format(c.get_latest("stable")))
                 upgrade_info = bundle.get_charms_upgrade_policy(c.get_name())
                 if upgrade_info and upgrade_info['release']:
-                    print("Upgrading {}".format(charm))
-                    print("Upgrading info {}".format(upgrade_info))
+                    print("Releasing charm {} from channel {} to channel {}"
+                          .format(c.get_latest(upgrade_info["from-channel"]),
+                                  upgrade_info["from-channel"],
+                                  upgrade_info['to-channel']))
                     c.release_latest(upgrade_info['from-channel'], upgrade_info['to-channel'])
 
 
