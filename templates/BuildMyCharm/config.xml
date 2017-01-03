@@ -72,7 +72,7 @@ else
     juju add-model test-{{charmname}}-$BUILD_NUMBER --credential="$credential"
 fi
 
-if [ -z "{{referencebundle}}" ]
+if [ -z "{{bundle_name}}" ]
 then
     rm -f totest.yaml
     echo "bundle: /tmp/bundles/{{bundle_fname}}" &gt;&gt; totest.yaml

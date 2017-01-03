@@ -10,6 +10,8 @@ Restart=always
 WorkingDirectory={{charm_dir}}
 Environment=PYTHONPATH=${PYTHONPATH}:./lib
 Environment=FLASK_APP=./lib/CIGWServer.py
+Environment=LC_ALL=C.UTF-8
+Environment=LANG=C.UTF-8
 ExecStart={{charm_dir}}/../.venv/bin/flask run -h 0.0.0.0
 
 [Install]
