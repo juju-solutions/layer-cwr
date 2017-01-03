@@ -62,7 +62,7 @@ juju switch {{controller}}
 # we have to figure out which credential to use because of:
 # https://bugs.launchpad.net/juju/+bug/1652171
 tryaddmodel=$(juju add-model wont-be-added --credential invalid-credential 2>&amp;1) || true
-if expr "$tryaddmodel" : '.* localhost .*'
+if expr "$tryaddmodel" : '.* \(localhost\|lxd\) .*'
 then
     juju add-model test-{{charmname}}-$BUILD_NUMBER
 else
