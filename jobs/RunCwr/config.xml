@@ -50,7 +50,7 @@ else
     juju add-model test-cwr-$CHARM_NAME-$BUILD_NUMBER --credential="$credential"
 fi
 
-cwr $CONTROLLER:test-cwr-$CHARM_NAME-$BUILD_NUMBER totest.yaml --results-dir /srv/artifacts --test-id $BUILD_NUMBER
+cwr -F $CONTROLLER:test-cwr-$CHARM_NAME-$BUILD_NUMBER totest.yaml --results-dir /srv/artifacts --test-id $BUILD_NUMBER
 </command>
     </hudson.tasks.Shell>
   </builders>

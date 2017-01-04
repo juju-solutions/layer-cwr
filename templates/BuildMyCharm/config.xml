@@ -101,7 +101,7 @@ EOP
     rm -f totest.yaml
     echo "bundle: /tmp/bundles/{{bundle_fname}}" &gt;&gt; totest.yaml
     echo "bundle_name: {{charmname}}_in_{{bundle_fname}}" &gt;&gt; totest.yaml
-    cwr {{controller}}:test-{{charmname}}-$BUILD_NUMBER totest.yaml --results-dir /srv/artifacts --test-id $BUILD_NUMBER
+    cwr -F {{controller}}:test-{{charmname}}-$BUILD_NUMBER totest.yaml --results-dir /srv/artifacts --test-id $BUILD_NUMBER
     ln -s /srv/artifacts/{{charmname}}_in_{{bundle_fname}}/$BUILD_NUMBER /var/lib/jenkins/jobs/$JOB_NAME/builds/$BUILD_NUMBER/archive
 fi
 
