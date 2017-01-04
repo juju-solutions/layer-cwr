@@ -97,6 +97,64 @@ add a tag to your github repository.
 Combining the two jobs gives you a basic yet powerful CI workflow.
 
 
+# Using CWR to CI your Bunldes
+
+## Build Bunlde action
+
+With the `build-bundle` action you are able to update your bundles using the
+charms already released on the channels of the Juju store.
+`build-bundle` action takes the follwoing parameters:
+  - repo: The github repo of the bundle
+  - branch (optional): The branch of the github repo where the bundle is.
+  - bundle-name: The name of the bundle
+  - controller: Name of the controller to use for running the tests
+
+This action will create two Jenkins jobs. The first one will grab
+the repository with your bundle, read the bundle.yaml and see if there are
+any charms that can be updated. The second job will additionally
+update the bundle.yaml and run all the tests of the bundle.
+If the tests are successful this job could also release the bundle
+and the charms to the store.
+The first job will run periodically (every 10 minutes); the second job
+is triggered by the first job.
+
+This action requires you to have a `ci-info.yaml` file in your bundle repository.
+Here is an example of how that yaml should look like:
+
+```
+bundle:
+  name: cwr-ci
+  namespace: juju-solutions
+  release: true
+  to-channel: beta
+charm-upgrade:
+  cwr:
+    from-channel: edge
+    release: true
+    to-channel: beta
+```
+
+Under bundle you should set the bundle `name`.
+Should you decide to also release the bundle upon a successful update and test cycle
+you should set the `release` to true, the `namespace` to where you want to release
+the bundle to (`cs:~<namespace>/<name>`) and the channel you want the bundle released
+to.
+
+In the `charm-upgrade` you can have the list of charms you want to be upgraded.
+Note that you can choose to upgrade only a subset of charms. Furthermore,
+for each charm you can specify the channel in which the CI should look for new revisions
+and (optionally) channel the charm should be released to in case of a successful
+test.
+
+An example run of this action might look like this:
+
+    juju run-action cwr/0 build-bundle \
+      repo=https://github.com/juju-solutions/bunlde-cwr-ci \
+      branch=build-bunlde  \
+      bundle-name=cwr-ci \
+      controller=lxd
+
+
 # Resources
 
 - [Juju mailing list](https://lists.ubuntu.com/mailman/listinfo/juju)
