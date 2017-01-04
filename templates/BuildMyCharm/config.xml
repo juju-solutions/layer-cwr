@@ -71,6 +71,10 @@ else
     credential=$(juju credentials --format=json | jq -r '.credentials.'${cloud}'."cloud-credentials" | keys[0]')
     juju add-model test-{{charmname}}-$BUILD_NUMBER --credential="$credential"
 fi
+function cleanup_model() {
+    juju destroy-model test-{{charmname}}-$BUILD_NUMBER -y
+}
+trap cleanup_model EXIT
 
 if [ -z "{{bundle_name}}" ]
 then
@@ -110,17 +114,5 @@ fi
       </command>
     </hudson.tasks.Shell>
   </builders>
-  <publishers>
-    <org.jenkinsci.plugins.postbuildscript.PostBuildScript plugin="postbuildscript@0.17">
-      <buildSteps>
-        <hudson.tasks.Shell>
-          <command>juju destroy-model test-{{charmname}}-$BUILD_NUMBER -y || true</command>
-        </hudson.tasks.Shell>
-      </buildSteps>
-      <scriptOnlyIfSuccess>false</scriptOnlyIfSuccess>
-      <scriptOnlyIfFailure>false</scriptOnlyIfFailure>
-      <markBuildUnstable>false</markBuildUnstable>
-    </org.jenkinsci.plugins.postbuildscript.PostBuildScript>
-  </publishers>
   <buildWrappers/>
 </project>
