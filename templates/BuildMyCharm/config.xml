@@ -70,7 +70,7 @@ if [[ "$cloud" != "localhost" &amp;&amp; "$cloud" != "lxd" ]]; then
         echo 'Please use set-credentials to add the credential.'
         exit 1
     fi
-    JUJU_CREDENTIAL=$(juju credentials --format=json | jq -r '.credentials.'${cloud}'."cloud-credentials" | keys[0]')
+    export JUJU_CREDENTIAL=$(juju credentials --format=json | jq -r '.credentials.'${cloud}'."cloud-credentials" | keys[0]')
     credential_arg="--credential=$JUJU_CREDENTIAL"
  fi
 juju add-model test-{{charmname}}-$BUILD_NUMBER $credential_arg
