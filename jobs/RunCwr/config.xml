@@ -33,7 +33,8 @@
   <concurrentBuild>false</concurrentBuild>
   <builders>
     <hudson.tasks.Shell>
-      <command>rm -f totest.yaml
+      <command>#!/bin/bash
+touch totest.yaml
 echo &quot;bundle: $BUILD_CHARM_TARGET&quot; &gt;&gt; totest.yaml
 echo &quot;bundle_name: $CHARM_NAME&quot; &gt;&gt; totest.yaml
 juju switch $CONTROLLER
