@@ -63,8 +63,9 @@ the charm store, call the `build-on-commit` action. This action takes the
 following parameters:
   - repo: The github repo of the charm or top layer
   - charm-name: The name of the charm
-  - reference-bundle: Optional charm store URL of a bundle to use to test the
+  - reference-bundle: Charm store URL of a bundle to use to test the
     given charm (e.g.: `cs:bundle/mediawiki-single`).
+    If this is not provided, the charm must set it in its tests.yaml.
   - controller: Name of the controller to use for running the tests
 
 Should you decide to release a charm after a successful test, you can also
