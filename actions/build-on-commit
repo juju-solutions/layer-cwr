@@ -29,6 +29,9 @@ def add_job():
                 .get_reference_bundle()
     except cwrhelpers.InvalidBundle as e:
         cwrhelpers.fail_action(str(e), e.reason)
+    if not bundle_name:
+        cwrhelpers.fail_action('Charm does not provide reference bundle '
+                               'and none was provided to action')
 
     rep = {"{{gitrepo}}": hookenv.action_get("repo"),
            "{{pushtochannel}}": hookenv.action_get("push-to-channel") or "",
