@@ -39,7 +39,7 @@
   <concurrentBuild>false</concurrentBuild>
   <builders>
     <hudson.tasks.Shell>
-      <command>
+      <command>#!/bin/bash
 if [ ! -f "first-run.lock" ]; then
   touch "first-run.lock"
   echo "First run automaticaly triggered. Skipped."
@@ -61,15 +61,18 @@ juju switch {{controller}}
 
 # we have to figure out which credential to use because of:
 # https://bugs.launchpad.net/juju/+bug/1652171
-tryaddmodel=$(juju add-model wont-be-added --credential invalid-credential 2>&amp;1) || true
-if expr "$tryaddmodel" : '.* \(localhost\|lxd\) .*'
-then
-    juju add-model test-{{charmname}}-$BUILD_NUMBER
-else
-    cloud=$(echo $tryaddmodel | cut -d'"' -f 4)
-    credential=$(juju credentials --format=json | jq -r '.credentials.'${cloud}'."cloud-credentials" | keys[0]')
-    juju add-model test-{{charmname}}-$BUILD_NUMBER --credential="$credential"
-fi
+cloud=$(juju add-model wont-be-added --credential invalid-credential 2>&amp;1 | sed -e 's/.*cloud "\?\([^ "]*\)"\?.*/\1/')
+credential_arg=""
+if [[ "$cloud" != "localhost" &amp;&amp; "$cloud" != "lxd" ]]; then
+    if ! juju credentials --format=json | grep -q $cloud; then
+        echo 'This cloud requires a credential which was not found.'
+        echo 'Please use set-credentials to add the credential.'
+        exit 1
+    fi
+    JUJU_CREDENTIAL=$(juju credentials --format=json | jq -r '.credentials.'${cloud}'."cloud-credentials" | keys[0]')
+    credential_arg="--credential=$JUJU_CREDENTIAL"
+ fi
+juju add-model test-{{charmname}}-$BUILD_NUMBER $credential_arg
 
 if [ -z "{{referencebundle}}" ]
 then
