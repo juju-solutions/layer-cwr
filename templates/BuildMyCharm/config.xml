@@ -98,8 +98,8 @@ rm -f totest.yaml
 echo "bundle: /tmp/bundles/{{bundle_fname}}" &gt;&gt; totest.yaml
 echo "bundle_name: {{charmname}}_in_{{bundle_fname}}" &gt;&gt; totest.yaml
 echo "bundle_file: bundle.yaml" >> totest.yaml
-cwr -F {{controller}}:test-{{charmname}}-$BUILD_NUMBER totest.yaml --results-dir /srv/artifacts --test-id $BUILD_NUMBER
 ln -s /srv/artifacts/{{charmname}}_in_{{bundle_fname}}/$BUILD_NUMBER /var/lib/jenkins/jobs/$JOB_NAME/builds/$BUILD_NUMBER/archive
+cwr -F {{controller}}:test-{{charmname}}-$BUILD_NUMBER totest.yaml --results-dir /srv/artifacts --test-id $BUILD_NUMBER
 
 if [ ! -z "{{pushtochannel}}" ]
 then
