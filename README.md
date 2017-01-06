@@ -13,43 +13,41 @@ your bootstrapped controller(s) with appropriate permissions:
     juju add-user ciuser
     juju grant ciuser add-model
 
-Now call the `register-controller` action and provide a human-friendly name and
-the registration token from the above `juju add-user` command.
+Now register your controller with CWR by calling the `register-controller`
+action. Provide the controller name and the registration token from the above
+`juju add-user` command:
 
     juju run-action cwr/0 register-controller name=<controller-name> \
         token=<registration-token>
 
 If you're using a cloud that requires credentials (i.e., anything other than
-the LXD provider), you will also need to provide those credentials as well,
-as base64-encoded YAML:
+the LXD provider), you will need to provide those credentials as base64-encoded
+YAML. You can find your credentials in `~/.local/share/juju/credentials.yaml`,
+but you may want to extract and share just the portions that will be
+used with the CI system.  In the future, Juju should provide a way to
+share access to the credentials without having to share the credentials
+themselves. Until then, inform CWR of your controller credentials with the
+`set-credentials` action:
 
     juju run-action cwr/0 set-credentials cloud=<cloud-name> \
         credentials="$(base64 credentials.yaml)"
 
-You can find your credentials in `~/.local/share/juju/credentials.yaml`,
-but you may want to extract and share just the portions that will be
-used with the CI system.  In the future, Juju should provide a way to
-share access to the credentials without having to share the credentials
-themselves.
-
-To push and release build artifacts to the Juju store directly from the CI,
-you will need to initialize the session between this charm and the store. To do
-so, either call the `store-login` action or trigger the `InitJujuStoreSession`
-jenkins job.
-
-The `store-login` action requires a base64 representation of an existing auth
-token. For example:
+Finally, you may setup a session with the charm store that allows CWR to
+release charms to your namespace. To do this, call the `store-login` action
+and provide the base64 representation of an existing auth token:
 
     charm login
     .........
-    export TOKEN=`base64 ~/.local/share/juju/store-usso-token`
-    juju run-action cwr/0 store-login charmstore-usso-token="$TOKEN"
+    juju run-action cwr/0 store-login \
+        charmstore-usso-token="$(base64 ~/.local/share/juju/store-usso-token)"
 
 The charm store session will remain active while the CI system is online. To
-terminate the session, either run the `store-logout` action.
+terminate the session, run the `store-logout` action:
+
+    juju run-action cwr/0 store-logout
 
 Note that these actions are also available as jobs in Jenkins and can be run
-from there instead.
+from the Jenkins workspace if desired.
 
 
 # Using CWR to build your Charms
@@ -62,7 +60,7 @@ If you want CWR to build your charm, test it and (optionally) release it to
 the charm store, call the `build-on-commit` action. This action takes the
 following parameters:
   - repo: The github repo of the charm or top layer
-  - charm-name: The name of the charm
+  - charm-name: The name of the charm to test
   - reference-bundle: Charm store URL of a bundle to use to test the
     given charm (e.g.: `cs:bundle/mediawiki-single`).
     If this is not provided, the charm must set it in its tests.yaml.
@@ -77,10 +75,11 @@ specify:
 An example run of this action might look like this:
 
     juju run-action cwr/0 build-on-commit \
-      repo=https://github.com/sastix/tomee-charm-layer \
-      charm-name=apache-tomee  \
+      repo=https://github.com/juju-solutions/layer-cwr \
+      charm-name=cwr \
+      reference-bundle=cs:~juju-solutions/cwr-ci \
       push-to-channel=edge \
-      lp-id=kos.tsakalozos \
+      lp-id=juju-solutions \
       controller=lxd
 
 Running this action will result in a new job in Jenkins called
