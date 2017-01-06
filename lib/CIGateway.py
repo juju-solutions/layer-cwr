@@ -1,30 +1,38 @@
+from pathlib import Path
+import subprocess
+
 from jenkins import Jenkins
-from jujubigdata import utils
-from subprocess import Popen, call
+from charmhelpers.core import hookenv, host
+from charms.templating.jinja2 import render
 
 
 class CIGateway:
 
     @classmethod
     def start(cls, jenkins_url, jenkins_user, jenkins_pass, user='jenkins'):
-        properties_path = "/var/lib/jenkins/CIGWServer.properties"
-        with open(properties_path, 'w') as properties_file:
-            properties_file.write("{}\n".format(jenkins_url))
-            properties_file.write("{}\n".format(jenkins_user))
-            properties_file.write("{}\n".format(jenkins_pass))
+        Path("/var/lib/jenkins/CIGWServer.properties").write_text("\n".join([
+            jenkins_url,
+            jenkins_user,
+            jenkins_pass,
+        ]))
 
-        cls._run_bg(user, './scripts/startflask.sh')
+        host.mkdir("/var/log/cwr-server",
+                   owner='ubuntu',
+                   group='ubuntu',
+                   perms=0o755)
+
+        render(source="cwr-server.service",
+               target="/etc/systemd/system/cwr-server.service",
+               context={
+                   'charm_dir': hookenv.charm_dir()
+               })
+
+        subprocess.check_call(['systemctl', 'daemon-reload'])
+        host.service_start('cwr-server')
 
     @classmethod
     def stop(cls):
-        call(['pkill', '-f', 'flask'])
-
-    @classmethod
-    def _run_bg(cls, user, command, *args):
-        parts = [command] + list(args)
-        quoted = ' '.join("'%s'" % p for p in parts)
-        e = utils.read_etc_env()
-        Popen(['su', user, '-c', '{}'.format(quoted)], env=e)
+        host.service_stop('cwr-server')
 
     @classmethod
     def get_current_jenkins(cls):

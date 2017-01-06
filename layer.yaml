@@ -4,5 +4,6 @@ options:
   basic:
     packages:
       - unzip
+      - python-apport
       - jq
     use_venv: true

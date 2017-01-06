@@ -6,8 +6,9 @@ build-on-commit:
             type: string
         reference-bundle:
             description: |
-                Optional charm store URL for a bundle to use to test the given
+                Charm store URL for a bundle to use to test the given
                 charm. For example, "~charmers/mediawiki-single".
+                If this is not provided, the charm must set it in its tests.yaml.
             type: string
             default: ""
         repo:
@@ -40,8 +41,9 @@ build-on-release:
             type: string
         reference-bundle:
             description: |
-                Optional charm store URL for a bundle to use to test the given
+                Charm store URL for a bundle to use to test the given
                 charm. For example, "~charmers/mediawiki-single".
+                If this is not provided, the charm must set it in its tests.yaml.
             type: string
             default: ""
         repo:

@@ -15,3 +15,8 @@ requires:
 provides:
   ci-client:
     interface: cwr-ci
+storage:
+  artifacts:
+    type: filesystem
+    description: Storage for build artifacts
+    location: /srv/artifacts

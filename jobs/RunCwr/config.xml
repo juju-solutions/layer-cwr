@@ -41,31 +41,26 @@ juju switch $CONTROLLER
 
 # we have to figure out which credential to use because of:
 # https://bugs.launchpad.net/juju/+bug/1652171
-tryaddmodel=$(juju add-model wont-be-added --credential invalid-credential 2>&amp;1) || true
-if expr "$tryaddmodel" : '.* localhost .*'
-then
-    juju add-model test-cwr-$CHARM_NAME-$BUILD_NUMBER
-else
-    cloud=$(echo $tryaddmodel | cut -d'"' -f 4)
+cloud=$(juju add-model wont-be-added --credential invalid-credential 2>&amp;1 | sed -e 's/.*cloud "\?\([^ "]*\)"\?.*/\1/')
+credential_arg=""
+if [[ "$cloud" != "localhost" &amp;&amp; "$cloud" != "lxd" ]]; then
+    if ! juju credentials --format=json | grep -q $cloud; then
+        echo 'This cloud requires a credential which was not found.'
+        echo 'Please use set-credentials to add the credential.'
+        exit 1
+    fi
     credential=$(juju credentials --format=json | jq -r '.credentials.'${cloud}'."cloud-credentials" | keys[0]')
-    juju add-model test-cwr-$CHARM_NAME-$BUILD_NUMBER --credential="$credential"
-fi
+    credential_arg="--credential=$credential"
+ fi
+juju add-model test-{{charmname}}-$BUILD_NUMBER $credential_arg
+function cleanup_model() {
+    juju destroy-model test-{{charmname}}-$BUILD_NUMBER -y
+}
+trap cleanup_model EXIT
 
-cwr $CONTROLLER:test-cwr-$CHARM_NAME-$BUILD_NUMBER totest.yaml
+cwr -F $CONTROLLER:test-cwr-$CHARM_NAME-$BUILD_NUMBER totest.yaml --results-dir /srv/artifacts --test-id $BUILD_NUMBER
 </command>
     </hudson.tasks.Shell>
   </builders>
-  <publishers>
-      <org.jenkinsci.plugins.postbuildscript.PostBuildScript plugin="postbuildscript@0.17">
-      <buildSteps>
-        <hudson.tasks.Shell>
-          <command>juju destroy-model test-cwr-$CHARM_NAME-$BUILD_NUMBER -y</command>
-        </hudson.tasks.Shell>
-      </buildSteps>
-      <scriptOnlyIfSuccess>false</scriptOnlyIfSuccess>
-      <scriptOnlyIfFailure>false</scriptOnlyIfFailure>
-      <markBuildUnstable>false</markBuildUnstable>
-    </org.jenkinsci.plugins.postbuildscript.PostBuildScript>
-   </publishers>
   <buildWrappers/>
 </project>
