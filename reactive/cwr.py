@@ -22,29 +22,30 @@ from controller import helpers
 def report_status():
     if not is_state('jenkins.available'):
         hookenv.status_set('waiting',
-                           'waiting for jenkins to become available')
+                           'Waiting for jenkins to become available.')
         return
 
     # jenkins.available is set from here on
     if not is_state('jenkins.jobs.ready'):
         hookenv.status_set('waiting',
-                           'waiting for jenkins jobs to be uploaded')
+                           'Waiting for jenkins jobs to be uploaded.')
         return
 
     # jenkins.available and jenkins.jobs.ready are set from here on
     controllers = helpers.get_controllers()
     if len(controllers) == 0:
         hookenv.status_set('blocked',
-                           'waiting for controller registration')
+                           'Waiting for controller registration.')
         return
 
     # jenkins.available and jenkins.jobs.ready and controllers > 0 from here on
     if helpers.get_charmstore_token():
-        hookenv.status_set('active',
-                           'ready')
+        msg = ('Ready (controllers: {}; store: authenticated).'
+               .format(controllers))
     else:
-        hookenv.status_set('active',
-                           'ready (not authenticated to charm store)')
+        msg = ('Ready (controllers: {}; store: unauthenticated).'
+               .format(controllers))
+    hookenv.status_set('active', msg)
 
 
 def pip_install_from_git(version, wheelhouse, repo):
@@ -59,7 +60,7 @@ def pip_install_from_git(version, wheelhouse, repo):
 
 @when_not('juju-ci-env.installed')
 def install_juju():
-    hookenv.status_set('maintenance', 'installing juju')
+    hookenv.status_set('maintenance', 'Installing juju.')
     fetch.add_source("ppa:juju/stable")
     fetch.apt_update()
     fetch.apt_install(["juju", "charm-tools"])
@@ -94,7 +95,7 @@ def install_juju():
 @when('jenkins.available', 'juju-ci-env.installed')
 @when_not('jenkins.jobs.ready')
 def install_jenkins_jobs(connected_jenkins):
-    hookenv.status_set('maintenance', 'uploading jenkins jobs')
+    hookenv.status_set('maintenance', 'Uploading jenkins jobs.')
     jenkins_connection_info = connected_jenkins.get_connection_info()
     jclient = Jenkins(jenkins_connection_info["jenkins_url"],
                       jenkins_connection_info["admin_username"],
@@ -111,7 +112,7 @@ def install_jenkins_jobs(connected_jenkins):
 
     plugins = ["github", "ghprb", "postbuildscript"]
     for plugin in plugins:
-        hookenv.status_set('maintenance', 'Installing plugin {}'
+        hookenv.status_set('maintenance', 'Installing plugin {}.'
                            .format(plugin))
         reboot = jclient.install_plugin(plugin)
         hookenv.log("Installing plugin {}. Restart required: {}"
@@ -140,7 +141,7 @@ def cleanup_jenkins():
     Try to remove the jenkins jobs setup during initialisation,
     and stop the CI gateway service.
     '''
-    hookenv.status_set('maintenance', 'deleting jenkins jobs')
+    hookenv.status_set('maintenance', 'Deleting jenkins jobs.')
 
     # Since Jenkins is no more available. Ask the CIGateway to provide
     # a jenkins client (and hope Jenkins is still there)
@@ -173,7 +174,7 @@ def jenkins_unavailable():
 @when('jenkins.available', 'jenkins.has.changed')
 def ci_connection_updated(jenkins, jenkins_changed):
     jenkins_connection_info = jenkins.get_connection_info()
-    hookenv.status_set('maintenance', 'configuring CI gateway.')
+    hookenv.status_set('maintenance', 'Configuring CI gateway.')
     CIGateway.stop()
     CIGateway.start(jenkins_connection_info["jenkins_url"],
                     jenkins_connection_info["admin_username"],
@@ -184,7 +185,7 @@ def ci_connection_updated(jenkins, jenkins_changed):
 
 @when_file_changed(helpers.CONTROLLERS_LIST_FILE)
 def controllers_updated():
-    hookenv.log("Contorllers file has changed")
+    hookenv.log("Controllers file has changed")
     if is_state('ci-client.joined'):
         hookenv.log("Contacting clients")
         ci_client = RelationBase.from_state('ci-client.joined')
