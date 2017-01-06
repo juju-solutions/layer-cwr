@@ -79,15 +79,8 @@ function cleanup_model() {
 }
 trap cleanup_model EXIT
 
-if [ -z "{{bundle_name}}" ]
-then
-    rm -f totest.yaml
-    echo "bundle: /tmp/bundles/{{bundle_fname}}" &gt;&gt; totest.yaml
-    echo "bundle_name: {{charmname}}" &gt;&gt; totest.yaml
-    cwr {{controller}}:test-{{charmname}}-$BUILD_NUMBER totest.yaml --results-dir /srv/artifacts --test-id $BUILD_NUMBER
-else
-    function update_bundle() {
-        cat &lt;&lt;EOP
+function update_bundle() {
+    cat &lt;&lt;EOP
 import yaml
 with open('/tmp/bundles/{{bundle_fname}}/bundle.yaml', 'r') as fp:
     bundle = yaml.safe_load(fp)
@@ -96,17 +89,17 @@ app['charm'] = '/tmp/$OUTPUT_DIR/{{charmname}}'
 with open('/tmp/bundles/{{bundle_fname}}/bundle.yaml', 'w') as fp:
     yaml.dump(bundle, fp)
 EOP
-    }
-    [ -e /tmp/bundles ] || mkdir /tmp/bundles
-    rm -rf /tmp/bundles/{{bundle_fname}}
-    charm pull "{{bundle_name}}" /tmp/bundles/{{bundle_fname}}
-    python3 -c "$(update_bundle)"
-    rm -f totest.yaml
-    echo "bundle: /tmp/bundles/{{bundle_fname}}" &gt;&gt; totest.yaml
-    echo "bundle_name: {{charmname}}_in_{{bundle_fname}}" &gt;&gt; totest.yaml
-    cwr -F {{controller}}:test-{{charmname}}-$BUILD_NUMBER totest.yaml --results-dir /srv/artifacts --test-id $BUILD_NUMBER
-    ln -s /srv/artifacts/{{charmname}}_in_{{bundle_fname}}/$BUILD_NUMBER /var/lib/jenkins/jobs/$JOB_NAME/builds/$BUILD_NUMBER/archive
-fi
+}
+[ -e /tmp/bundles ] || mkdir /tmp/bundles
+rm -rf /tmp/bundles/{{bundle_fname}}
+charm pull "{{bundle_name}}" /tmp/bundles/{{bundle_fname}}
+python3 -c "$(update_bundle)"
+rm -f totest.yaml
+echo "bundle: /tmp/bundles/{{bundle_fname}}" &gt;&gt; totest.yaml
+echo "bundle_name: {{charmname}}_in_{{bundle_fname}}" &gt;&gt; totest.yaml
+echo "bundle_file: bundle.yaml" >> totest.yaml
+cwr -F {{controller}}:test-{{charmname}}-$BUILD_NUMBER totest.yaml --results-dir /srv/artifacts --test-id $BUILD_NUMBER
+ln -s /srv/artifacts/{{charmname}}_in_{{bundle_fname}}/$BUILD_NUMBER /var/lib/jenkins/jobs/$JOB_NAME/builds/$BUILD_NUMBER/archive
 
 if [ ! -z "{{pushtochannel}}" ]
 then
