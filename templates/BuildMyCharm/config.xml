@@ -56,7 +56,7 @@ then
     SERIES_FLAG="--series {{series}}"
 fi
 
-charm build $SERIES_FLAG
+charm build $SERIES_FLAG "{{charm_subdir}}"
 
 juju switch {{controller}}
 

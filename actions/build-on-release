@@ -35,6 +35,7 @@ def add_job():
 
     refspec = "<refspec>+refs/tags/*:refs/remotes/origin/tags/*</refspec>"
     rep = {"{{gitrepo}}": hookenv.action_get("repo"),
+           "{{charm_subdir}}": hookenv.action_get("charm-subdir"),
            "{{pushtochannel}}": hookenv.action_get("push-to-channel") or "",
            "{{lpid}}": hookenv.action_get("lp-id") or "",
            "{{branch}}": "*/tags/*",

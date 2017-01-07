@@ -12,8 +12,13 @@ build-on-commit:
             type: string
             default: ""
         repo:
-            description: Git repository.
+            description: Git repository for the charm to watch.
             type: string
+        charm-subdir:
+            description: |
+                Subdirectory in the repo where the charm lives,
+                if not at the top-level.
+            default: ""
         controller:
             description: Name of controller to be used.
             type: string
@@ -47,8 +52,13 @@ build-on-release:
             type: string
             default: ""
         repo:
-            description: Git repository.
+            description: Git repository for the charm to watch.
             type: string
+        charm-subdir:
+            description: |
+                Subdirectory in the repo where the charm lives,
+                if not at the top-level.
+            default: ""
         controller:
             description: Name of controller to be used.
             type: string
