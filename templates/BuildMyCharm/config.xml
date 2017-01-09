@@ -58,26 +58,46 @@ fi
 
 charm build $SERIES_FLAG "{{charm_subdir}}"
 
-juju switch {{controller}}
+# Keep track of the controllers and models we want CWR to run
+CONTROLLERS=""
+MODELS_TO_TEST=""
 
-# we have to figure out which credential to use because of:
-# https://bugs.launchpad.net/juju/+bug/1652171
-cloud=$(juju add-model wont-be-added --credential invalid-credential 2>&amp;1 | sed -e 's/.*cloud "\?\([^ "]*\)"\?.*/\1/')
-credential_arg=""
-if [[ "$cloud" != "localhost" &amp;&amp; "$cloud" != "lxd" ]]; then
-    if ! juju credentials --format=json | grep -q $cloud; then
-        echo 'This cloud requires a credential which was not found.'
-        echo 'Please use set-credentials to add the credential.'
-        exit 1
-    fi
-    credential=$(juju credentials --format=json | jq -r '.credentials.'${cloud}'."cloud-credentials" | keys[0]')
-    credential_arg="--credential=$credential"
- fi
-juju add-model test-{{charmname}}-$BUILD_NUMBER $credential_arg
-function cleanup_model() {
-    juju destroy-model test-{{charmname}}-$BUILD_NUMBER -y
-}
-trap cleanup_model EXIT
+# If not specified, CWR will run on all registered controllers
+if [ -z "{{controller}}" ]
+then
+    CONTROLLERS=`cat /var/lib/jenkins/controller.names`
+else
+    CONTROLLERS={{controller}}
+fi
+
+for controller in $CONTROLLERS
+do
+    juju switch ${controller}
+
+    # we have to figure out which credential to use because of:
+    # https://bugs.launchpad.net/juju/+bug/1652171
+    cloud=$(juju add-model wont-be-added --credential invalid-credential 2>&amp;1 | sed -e 's/.*cloud "\?\([^ "]*\)"\?.*/\1/')
+    credential_arg=""
+    if [[ $cloud != localhost* &amp;&amp; $cloud != lxd ]]; then
+        if ! juju credentials --format=json | grep -q $cloud; then
+            echo 'This cloud requires a credential which was not found.'
+            echo 'Please use set-credentials to add the credential.'
+            exit 1
+        fi
+        credential=$(juju credentials --format=json | jq -r '.credentials.'${cloud}'."cloud-credentials" | keys[0]')
+        credential_arg="--credential=$credential"
+     fi
+    juju add-model test-{{charmname}}-$BUILD_NUMBER $credential_arg
+
+    # Keep track of all the models we want CWR to test
+    MODELS_TO_TEST+="${controller}:test-{{charmname}}-$BUILD_NUMBER "
+
+    # We want models for all controllers destroyed when this shell exits
+    eval "function cleanup_${controller}_model() { juju destroy-model ${controller}:test-{{charmname}}-$BUILD_NUMBER -y; }"
+    old_trap=`trap -p EXIT | awk -F"'" '{print $2}'`
+    new_trap="cleanup_${controller}_model;${old_trap}"
+    trap "${new_trap}" EXIT
+done
 
 function update_bundle() {
     cat &lt;&lt;EOP
@@ -99,7 +119,7 @@ echo "bundle: /tmp/bundles/{{bundle_fname}}" &gt;&gt; totest.yaml
 echo "bundle_name: {{charmname}}_in_{{bundle_fname}}" &gt;&gt; totest.yaml
 echo "bundle_file: bundle.yaml" >> totest.yaml
 ln -s /srv/artifacts/{{charmname}}_in_{{bundle_fname}}/$BUILD_NUMBER /var/lib/jenkins/jobs/$JOB_NAME/builds/$BUILD_NUMBER/archive
-cwr -F {{controller}}:test-{{charmname}}-$BUILD_NUMBER totest.yaml --results-dir /srv/artifacts --test-id $BUILD_NUMBER
+cwr -F ${MODELS_TO_TEST} totest.yaml --results-dir /srv/artifacts --test-id $BUILD_NUMBER
 
 if [ ! -z "{{pushtochannel}}" ]
 then

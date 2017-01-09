@@ -44,7 +44,8 @@ def add_job():
            "{{bundle_app_name}}": bundle_app_name,
            "{{refspec}}": "",
            "{{series}}": hookenv.action_get("series") or "",
-           "{{controller}}": hookenv.action_get("controller")}
+           "{{controller}}": hookenv.action_get("controller") or "",
+           }
 
     template_path_source = "templates/BuildMyCharm/config.xml"
     with open(template_path_source) as infile:
