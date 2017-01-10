@@ -114,11 +114,15 @@ EOP
 rm -rf /tmp/bundles/{{bundle_fname}}
 charm pull "{{bundle_name}}" /tmp/bundles/{{bundle_fname}}
 python3 -c "$(update_bundle)"
+
+# Generate the test plan yaml
 rm -f totest.yaml
 echo "bundle: /tmp/bundles/{{bundle_fname}}" &gt;&gt; totest.yaml
 echo "bundle_name: {{charmname}}_in_{{bundle_fname}}" &gt;&gt; totest.yaml
 echo "bundle_file: bundle.yaml" >> totest.yaml
-ln -s /srv/artifacts/{{charmname}}_in_{{bundle_fname}}/$BUILD_NUMBER /var/lib/jenkins/jobs/$JOB_NAME/builds/$BUILD_NUMBER/archive
+
+# Link cwr artifacts for visibility in the jenkins job
+ln -s /srv/artifacts/{{charm_fname}}_in_{{bundle_fname}}/$BUILD_NUMBER /var/lib/jenkins/jobs/$JOB_NAME/builds/$BUILD_NUMBER/archive
 cwr -F ${MODELS_TO_TEST} totest.yaml --results-dir /srv/artifacts --test-id $BUILD_NUMBER
 
 if [ ! -z "{{pushtochannel}}" ]

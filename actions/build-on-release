@@ -23,7 +23,7 @@ def add_job():
                       jenkins_connection_info["admin_username"],
                       jenkins_connection_info["admin_password"])
 
-    charm_name = hookenv.action_get("charm-name")
+    charm_name, charm_fname = cwrhelpers.get_charm_names()
     try:
         bundle_name, bundle_fname, bundle_app_name = cwrhelpers\
                 .get_reference_bundle()
@@ -40,6 +40,7 @@ def add_job():
            "{{lpid}}": hookenv.action_get("lp-id") or "",
            "{{branch}}": "*/tags/*",
            "{{charmname}}": charm_name,
+           "{{charm_fname}}": charm_fname,
            "{{bundle_name}}": bundle_name,
            "{{bundle_fname}}": bundle_fname,
            "{{bundle_app_name}}": bundle_app_name,
@@ -54,7 +55,7 @@ def add_job():
         for src, target in rep.items():
             data = data.replace(src, target)
         try:
-            jclient.create_job("release-charm-{}".format(charm_name), data)
+            jclient.create_job("release-charm-{}".format(charm_fname), data)
         except JenkinsException as e:
             cwrhelpers.fail_action(str(e))
 

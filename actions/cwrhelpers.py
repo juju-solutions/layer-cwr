@@ -54,6 +54,16 @@ def fetch_reference_bundle(charm_name):
             charm_name, e), hookenv.ERROR)
 
 
+def get_charm_names():
+    '''
+    Returns the given charm name and a sanitized version that matches
+    CWR artifact naming.
+    '''
+    charm_name = hookenv.action_get("charm-name")
+    charm_fname = re.sub(r'[^a-zA-Z0-9]', '_', charm_name)
+    return charm_name, charm_fname
+
+
 def get_reference_bundle():
     # If we have a reference bundle, determine the app name used for our charm
     charm_name = hookenv.action_get("charm-name")
