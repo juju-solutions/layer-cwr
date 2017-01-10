@@ -14,24 +14,14 @@
   <builders>
     <hudson.tasks.Shell>
       <command>
+#!/bin/bash
+
 juju switch {{controller}}
 juju add-model test-{{bundlename}}-$BUILD_NUMBER
 
-</command>
-    </hudson.tasks.Shell>
-    <hudson.tasks.Shell>
-      <command>
-#!/bin/sh
 python3 {{cwrcharmhome}}/scripts/bundlebuilder.py build {{repo}} {{branch}} {{controller}}:test-{{bundlename}}-$BUILD_NUMBER</command>
-    </hudson.tasks.Shell>
-  </builders>
-  <publishers>
-    <org.jenkinsci.plugins.postbuildscript.PostBuildScript plugin="postbuildscript@0.17">
-      <buildSteps>
-        <hudson.tasks.Shell>
-          <command>juju destroy-model test-{{bundlename}}-$BUILD_NUMBER
 </command>
-        </hudson.tasks.Shell>
+    </hudson.tasks.Shell>
       </buildSteps>
       <scriptOnlyIfSuccess>false</scriptOnlyIfSuccess>
       <scriptOnlyIfFailure>false</scriptOnlyIfFailure>

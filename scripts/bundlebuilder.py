@@ -41,7 +41,7 @@ def execute(cmd, raise_exception=True):
 
 class Bundle(object):
 
-    def __init__(self, repo, branch, ci_info_file=None, BT_dry_run=False, store_push_dry_run=False):
+    def __init__(self, repo, branch, ci_info_file=None, CWR_dry_run=False, store_push_dry_run=False):
         """
         Grab the bundle source and initialise the object.
 
@@ -49,7 +49,7 @@ class Bundle(object):
             repo: repository to grab the bundle from
             branch: branch to grab the bundle from
             ci_info_file: override the bundle's ci-info.yaml file
-            BT_dry_run: perform a dry run on running the tests
+            CWR_dry_run: perform a dry run on running the tests
             store_push_dry_run: perform a dry run on pushing to the store
         """
         self.tempdir = mkdtemp()
@@ -73,10 +73,10 @@ class Bundle(object):
         # We keep the sha1 digest/signature of the last bundle for
         # which we triggered a build in the follwing file
         self.signature_file = "last_bundle.signature"
-        if BT_dry_run:
-            self.BT_command = ["echo", "bundletester"]
+        if CWR_dry_run:
+            self.CWR_command = ["echo", "cwr"]
         else:
-            self.BT_command = ["bundletester"]
+            self.CWR_command = ["cwr"]
 
         if store_push_dry_run:
             self.charm_command = ["echo", "charm"]
@@ -217,11 +217,10 @@ class Bundle(object):
             model: the juju model to be used for deployments.
 
         """
-        cmd = list(self.BT_command)
-        cmd += ["-vFt", self.tempdir]
-        cmd += ["-e", model]
-        cmd += ["--bundle", "bundle.yaml"]
-        cmd += ["-l", "DEBUG"]
+        cmd = list(self.CWR_command)
+        cmd += ["-F", self.tempdir]
+        cmd += [model]
+        cmd += ["bundle.yaml"]
         execute(cmd)
 
     def release(self):
@@ -336,8 +335,8 @@ class Charm(object):
 
 class Coordinator(object):
 
-    def __init__(self, BT_dry_run=False, store_push_dry_run=False):
-        self.BT_dry_run = BT_dry_run
+    def __init__(self, CWR_dry_run=False, store_push_dry_run=False):
+        self.CWR_dry_run = CWR_dry_run
         self.store_push_dry_run = store_push_dry_run
 
     def check_bundle(self, repo, branch):
@@ -351,7 +350,7 @@ class Coordinator(object):
 
         """
         with Bundle(repo, branch,
-                    BT_dry_run=self.BT_dry_run,
+                    CWR_dry_run=self.CWR_dry_run,
                     store_push_dry_run=self.store_push_dry_run) as bundle:
             print("Checking {}".format(repo))
             charms = bundle.get_charms()
@@ -390,7 +389,7 @@ class Coordinator(object):
 
         """
         with Bundle(repo, branch,
-                    BT_dry_run=self.BT_dry_run,
+                    CWR_dry_run=self.CWR_dry_run,
                     store_push_dry_run=self.store_push_dry_run) as bundle:
             print("Checking {}".format(repo))
             charms = bundle.get_charms()
