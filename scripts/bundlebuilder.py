@@ -209,18 +209,26 @@ class Bundle(object):
             f.write(digest)
         return digest
 
-    def test(self, model):
+    def test(self, build_num, models):
         """
         Run tests on the bundle.
 
         Args:
-            model: the juju model to be used for deployments.
+            build_num: Build ID number
+            models: the juju model to be used for deployments.
 
         """
+        with open('totest.yaml', 'w') as f:
+            f.write("bundle: {}\n".format(self.tempdir))
+            f.write("bundle_name: {}\n".format(self.ci_info['bundle']['name']))
+            f.write("bundle_file: bundle.yaml\n")
+
         cmd = list(self.CWR_command)
-        cmd += ["-F", self.tempdir]
-        cmd += [model]
-        cmd += ["bundle.yaml"]
+        cmd += ["-F"]
+        cmd += models
+        cmd += ["totest.yaml"]
+        cmd += ["--results-dir", "/srv/artifacts"]
+        cmd += ["--test-id", build_num]
         execute(cmd)
 
     def release(self):
@@ -379,13 +387,14 @@ class Coordinator(object):
                 else:
                     return False
 
-    def test_and_release_bundle(self, repo, branch, model):
+    def test_and_release_bundle(self, repo, branch, build_num, models):
         """
         Build, test and release the bundle
         Args:
             repo: repository to grab the bundle from
             branch: branch  to grab the bundle from
-            model: Juju model to use for testing the charm
+            build_num: Build ID number
+            models: Juju models to use for testing the bundle
 
         """
         with Bundle(repo, branch,
@@ -407,7 +416,7 @@ class Coordinator(object):
                                   upgrade_info["from-channel"]))
                     bundle.upgrade(charm, c.get_latest(upgrade_info["from-channel"]))
             print("Testing new bundle")
-            bundle.test(model)
+            bundle.test(build_num, models)
             print("Releasing bundle")
             bundle.release()
             for charm in charms:
@@ -427,7 +436,8 @@ if __name__ == "__main__":
         print("  <operation>: 'check' or 'build' to check or build the bundle.")
         print("  <repo>: repo of the bundle.")
         print("  <branch>: branch to grab the bundle from.")
-        print("  <model>: model to be used for testing. Needed only for 'build' operation.")
+        print("  <build_id>: id of the build.")
+        print("  <list of models>: models to be used for testing. Needed only for 'build' operation.")
         sys.exit(1)
     operation = sys.argv[1]
     repo = sys.argv[2]
@@ -439,6 +449,7 @@ if __name__ == "__main__":
         else:
             sys.exit(1)
     else:
-        model = sys.argv[4]
-        tester.test_and_release_bundle(repo, branch, model)
+        build_num = sys.argv[4]
+        models = sys.argv[5:]
+        tester.test_and_release_bundle(repo, branch, build_num, models)
         sys.exit(0)

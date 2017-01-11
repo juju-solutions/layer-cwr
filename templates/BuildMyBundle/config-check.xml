@@ -19,12 +19,12 @@
     <hudson.tasks.Shell>
       <command>
 #!/bin/sh
-python3 {{cwrcharmhome}}/scripts/bundlebuilder.py check {{repo}} {{branch}}</command>
+python3 {{cwr_charm_home}}/scripts/bundlebuilder.py check {{repo}} {{branch}}</command>
     </hudson.tasks.Shell>
   </builders>
   <publishers>
     <hudson.tasks.BuildTrigger>
-      <childProjects>build-bundle-{{bundlename}}</childProjects>
+      <childProjects>build-bundle-{{bundle_name}}</childProjects>
       <threshold>
         <name>SUCCESS</name>
         <ordinal>0</ordinal>

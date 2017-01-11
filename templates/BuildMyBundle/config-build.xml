@@ -13,20 +13,53 @@
   <concurrentBuild>false</concurrentBuild>
   <builders>
     <hudson.tasks.Shell>
-      <command>
-#!/bin/bash
+      <command>#!/bin/bash
 
-juju switch {{controller}}
-juju add-model test-{{bundlename}}-$BUILD_NUMBER
+# Keep track of the controllers and models we want CWR to run
+CONTROLLERS=""
+MODELS_TO_TEST=""
 
-python3 {{cwrcharmhome}}/scripts/bundlebuilder.py build {{repo}} {{branch}} {{controller}}:test-{{bundlename}}-$BUILD_NUMBER</command>
+# If not specified, CWR will run on all registered controllers
+if [ -z "{{controller}}" ]
+then
+    CONTROLLERS=`cat /var/lib/jenkins/controller.names`
+else
+    CONTROLLERS={{controller}}
+fi
+
+for controller in $CONTROLLERS
+do
+    juju switch ${controller}
+
+    # we have to figure out which credential to use because of:
+    # https://bugs.launchpad.net/juju/+bug/1652171
+    cloud=$(juju add-model wont-be-added --credential invalid-credential 2>&amp;1 | sed -e 's/.*cloud "\?\([^ "]*\)"\?.*/\1/')
+    credential_arg=""
+    if [[ $cloud != localhost* &amp;&amp; $cloud != lxd ]]; then
+        if ! juju credentials --format=json | grep -q $cloud; then
+            echo 'This cloud requires a credential which was not found.'
+            echo 'Please use set-credentials to add the credential.'
+            exit 1
+        fi
+        credential=$(juju credentials --format=json | jq -r '.credentials.'${cloud}'."cloud-credentials" | keys[0]')
+        credential_arg="--credential=$credential"
+    fi
+    juju add-model test-{{bundle_name}}-$BUILD_NUMBER $credential_arg
+
+    # Keep track of all the models we want CWR to test
+    MODELS_TO_TEST+="${controller}:test-{{bundle_name}}-$BUILD_NUMBER "
+
+    # We want models for all controllers destroyed when this shell exits
+    eval "function cleanup_${controller}_model() { juju destroy-model ${controller}:test-{{bundle_name}}-$BUILD_NUMBER -y; }"
+    old_trap=`trap -p EXIT | awk -F"'" '{print $2}'`
+    new_trap="cleanup_${controller}_model;${old_trap}"
+    trap "${new_trap}" EXIT
+done
+
+ln -s /srv/artifacts/{{bundle_name}}/$BUILD_NUMBER /var/lib/jenkins/jobs/$JOB_NAME/builds/$BUILD_NUMBER/archive
+python3 {{cwr_charm_home}}/scripts/bundlebuilder.py build {{repo}} {{branch}} $BUILD_NUMBER $MODELS_TO_TEST
 </command>
     </hudson.tasks.Shell>
-      </buildSteps>
-      <scriptOnlyIfSuccess>false</scriptOnlyIfSuccess>
-      <scriptOnlyIfFailure>false</scriptOnlyIfFailure>
-      <markBuildUnstable>false</markBuildUnstable>
-    </org.jenkinsci.plugins.postbuildscript.PostBuildScript>
-  </publishers>
+  </builders>
   <buildWrappers/>
 </project>

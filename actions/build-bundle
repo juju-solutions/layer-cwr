@@ -24,10 +24,10 @@ def add_job():
     charm_home = getcwd()
 
     rep = {"{{repo}}": repo,
-           "{{bundlename}}": bundle_name,
-           "{{controller}}": controller,
+           "{{bundle_name}}": bundle_name,
+           "{{controller}}": controller or "",
            "{{branch}}": branch,
-           "{{cwrcharmhome}}": charm_home}
+           "{{cwr_charm_home}}": charm_home}
 
     # This job will get green if there are updates that can go to the bundle
     template_path_source = "templates/BuildMyBundle/config-check.xml"

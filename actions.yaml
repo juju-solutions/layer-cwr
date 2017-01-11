@@ -14,7 +14,7 @@ build-bundle:
         controller:
             description: Name of controller to be used.
             type: string
-    required: ['bundle-name', 'repo', 'controller']
+    required: ['bundle-name', 'repo']
 build-on-commit:
     description: Add a job job that would build a charm upon commit.
     params:

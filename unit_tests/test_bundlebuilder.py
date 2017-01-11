@@ -28,7 +28,7 @@ class TestBundlebuilder(unittest.TestCase):
         with patch("builtins.open", mock_open(read_data=self.bundle_yaml)) as mock_file:
             bundle = bundlebuilder.Bundle("http://github/myrepo", "mybranch", "myci-info.yaml",
                                           BT_dry_run=True, store_push_dry_run=True)
-            bundle.test("mymodel")
+            bundle.test(["mymodel", "mymodel2"])
             assert execute_mock.call_count is 2
 
     @patch('scripts.bundlebuilder.execute')
