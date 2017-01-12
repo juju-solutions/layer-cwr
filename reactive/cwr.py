@@ -72,12 +72,14 @@ def install_juju():
     # matrix not released to pypi yet
     pip_install_from_git(
         3, True, 'https://github.com/juju-solutions/matrix')
-    # juju plugins (for crashdump)
-    utils.run_as('root', 'git', 'clone', 'https://github.com/juju/plugins',
-                 '/usr/local/lib/juju-plugins')
-    for plugin in Path('/usr/local/lib/juju-plugins').iterdir():
-        if plugin.name.startswith('juju-'):
-            (Path('/usr/local/bin') / plugin.name).symlink_to(plugin)
+    # juju plugins (for crashdump). Skip if already deployed.
+    plugins_dir = '/usr/local/lib/juju-plugins'
+    if not os.path.isdir(plugins_dir):
+        utils.run_as('root', 'git', 'clone', 'https://github.com/juju/plugins',
+                     plugins_dir)
+        for plugin in Path(plugins_dir).iterdir():
+            if plugin.name.startswith('juju-'):
+                (Path('/usr/local/bin') / plugin.name).symlink_to(plugin)
 
     # Make user jenkins parametrised. And this action as well
     with open("/etc/sudoers", "a") as sudoers:
