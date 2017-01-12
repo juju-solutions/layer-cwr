@@ -57,7 +57,7 @@ do
 done
 
 ln -s /srv/artifacts/{{bundle_name}}/$BUILD_NUMBER /var/lib/jenkins/jobs/$JOB_NAME/builds/$BUILD_NUMBER/archive
-python3 {{cwr_charm_home}}/scripts/bundlebuilder.py build {{repo}} {{branch}} $BUILD_NUMBER $MODELS_TO_TEST
+python3 -u {{cwr_charm_home}}/scripts/bundlebuilder.py build {{repo}} {{branch}} $BUILD_NUMBER $MODELS_TO_TEST
 </command>
     </hudson.tasks.Shell>
   </builders>

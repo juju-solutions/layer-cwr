@@ -17,9 +17,8 @@
   <concurrentBuild>false</concurrentBuild>
   <builders>
     <hudson.tasks.Shell>
-      <command>
-#!/bin/sh
-python3 {{cwr_charm_home}}/scripts/bundlebuilder.py check {{repo}} {{branch}}</command>
+      <command>#!/bin/bash
+python3 -u {{cwr_charm_home}}/scripts/bundlebuilder.py check {{repo}} {{branch}}</command>
     </hudson.tasks.Shell>
   </builders>
   <publishers>
