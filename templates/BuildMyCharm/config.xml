@@ -125,7 +125,7 @@ echo "bundle_file: bundle.yaml" >> totest.yaml
 # We want cwr json results to be transformed to xml even if cwr fails
 eval "function transform_results() { python3 {{charm_home}}/scripts/json2junit.py /srv/artifacts/ hadoop_client_in_cs_hadoop_processing $BUILD_NUMBER  > $WORKSPACE/report.xml; }"
 old_trap=`trap -p EXIT | awk -F"'" '{print $2}'`
-new_trap="transform_results(); ${old_trap};"
+new_trap="transform_results; ${old_trap}"
 trap "${new_trap}" EXIT
 
 # Link cwr artifacts for visibility in the jenkins job
