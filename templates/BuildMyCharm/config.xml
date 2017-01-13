@@ -44,6 +44,7 @@ set -ex
 if [ ! -f "first-run.lock" ]; then
   touch "first-run.lock"
   echo "First run automaticaly triggered. Skipped."
+  touch results.xml
   exit 0
 fi
 
@@ -121,6 +122,12 @@ echo "bundle: /tmp/bundles/{{bundle_fname}}" &gt;&gt; totest.yaml
 echo "bundle_name: {{charmname}}_in_{{bundle_fname}}" &gt;&gt; totest.yaml
 echo "bundle_file: bundle.yaml" >> totest.yaml
 
+# We want cwr json results to be transformed to xml even if cwr fails
+eval "function transform_results() { python3 {{charm_home}}/scripts/json2junit.py /srv/artifacts/ hadoop_client_in_cs_hadoop_processing $BUILD_NUMBER  > $WORKSPACE/report.xml; }"
+old_trap=`trap -p EXIT | awk -F"'" '{print $2}'`
+new_trap="transform_results(); ${old_trap};"
+trap "${new_trap}" EXIT
+
 # Link cwr artifacts for visibility in the jenkins job
 ln -s /srv/artifacts/{{charm_fname}}_in_{{bundle_fname}}/$BUILD_NUMBER /var/lib/jenkins/jobs/$JOB_NAME/builds/$BUILD_NUMBER/archive
 cwr -F ${MODELS_TO_TEST} totest.yaml --results-dir /srv/artifacts --test-id $BUILD_NUMBER
@@ -134,5 +141,13 @@ fi
       </command>
     </hudson.tasks.Shell>
   </builders>
-  <buildWrappers/>
+   <publishers>
+    <hudson.tasks.junit.JUnitResultArchiver plugin="junit@1.19">
+      <testResults>*.xml</testResults>
+      <keepLongStdio>false</keepLongStdio>
+      <healthScaleFactor>1.0</healthScaleFactor>
+      <allowEmptyResults>false</allowEmptyResults>
+    </hudson.tasks.junit.JUnitResultArchiver>
+  </publishers>
+ <buildWrappers/>
 </project>
