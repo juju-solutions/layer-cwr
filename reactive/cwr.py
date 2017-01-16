@@ -77,9 +77,15 @@ def install_juju():
     if not os.path.isdir(plugins_dir):
         utils.run_as('root', 'git', 'clone', 'https://github.com/juju/plugins',
                      plugins_dir)
-        for plugin in Path(plugins_dir).iterdir():
-            if plugin.name.startswith('juju-'):
-                (Path('/usr/local/bin') / plugin.name).symlink_to(plugin)
+    else:
+        with host.chdir(plugins_dir):
+            utils.run_as('root', 'git', 'pull', 'origin', 'master')
+
+    for plugin in Path(plugins_dir).iterdir():
+        if plugin.name.startswith('juju-'):
+            target_file = Path('/usr/local/bin/{}'.format(plugin.name))
+            if not target_file.is_file():
+                target_file.symlink_to(plugin)
 
     # Make user jenkins parametrised. And this action as well
     with open("/etc/sudoers", "a") as sudoers:
