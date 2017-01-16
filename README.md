@@ -97,9 +97,9 @@ add a tag to your github repository.
 Combining the two jobs gives you a basic yet powerful CI workflow.
 
 
-# Using CWR to CI your Bunldes
+# Using CWR to CI your Bundles
 
-## Build Bunlde action
+## Build Bundle action
 
 With the `build-bundle` action you are able to update your bundles using the
 charms already released on the channels of the Juju store.
@@ -149,8 +149,8 @@ test.
 An example run of this action might look like this:
 
     juju run-action cwr/0 build-bundle \
-      repo=https://github.com/juju-solutions/bunlde-cwr-ci \
-      branch=build-bunlde  \
+      repo=https://github.com/juju-solutions/bundle-cwr-ci \
+      branch=build-bundle  \
       bundle-name=cwr-ci \
       controller=lxd
 
