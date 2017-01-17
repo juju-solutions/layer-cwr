@@ -13,6 +13,8 @@ def charmstore_logout():
     if subprocess.call(cmd) != 0:
         raise Exception
 
+    subprocess.call(["hooks/update-status"])
+
 
 if __name__ == "__main__":
     charmstore_logout()

@@ -47,6 +47,7 @@ def charmstore_login():
     if subprocess.call(cmd) != 0:
         raise Exception
 
+    subprocess.call(["hooks/update-status"])
 
 if __name__ == "__main__":
     charmstore_login()

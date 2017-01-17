@@ -193,6 +193,11 @@ def controllers_updated():
     report_status()
 
 
+@when('jenkins.available')
+def jenkins_available(jenkins):
+    report_status()
+
+
 def inform_client(client):
     controllers = helpers.get_controllers()
     token = helpers.get_charmstore_token()
