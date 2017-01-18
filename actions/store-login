@@ -12,6 +12,8 @@ activate_venv()
 
 from charmhelpers.core.host import chownr  # noqa: E402
 from charmhelpers.core import hookenv  # noqa: E402
+from utils import report_status
+
 
 USER = "jenkins"
 GROUP = "jenkins"
@@ -46,7 +48,7 @@ def charmstore_login():
     cmd = ['su', USER, '-c', 'charm login']
     if subprocess.call(cmd) != 0:
         raise Exception
-
+    report_status()
 
 if __name__ == "__main__":
     charmstore_login()

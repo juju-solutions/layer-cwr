@@ -2,6 +2,14 @@ import os
 from pathlib import Path
 from tempfile import TemporaryDirectory
 import time
+from utils import (
+    REST_PORT,
+    REST_PREFIX,
+    CONTROLLERS_LIST_FILE,
+    get_controllers,
+    get_charmstore_token,
+    report_status
+)
 from charmhelpers import fetch
 from charmhelpers.core import host, hookenv
 from charms.reactive import (
@@ -16,36 +24,6 @@ from charms.reactive import (
 from jujubigdata import utils
 from jenkins import Jenkins
 from CIGateway import CIGateway
-from controller import helpers
-
-
-def report_status():
-    if not is_state('jenkins.available'):
-        hookenv.status_set('waiting',
-                           'Waiting for jenkins to become available.')
-        return
-
-    # jenkins.available is set from here on
-    if not is_state('jenkins.jobs.ready'):
-        hookenv.status_set('waiting',
-                           'Waiting for jenkins jobs to be uploaded.')
-        return
-
-    # jenkins.available and jenkins.jobs.ready are set from here on
-    controllers = helpers.get_controllers()
-    if len(controllers) == 0:
-        hookenv.status_set('blocked',
-                           'Waiting for controller registration.')
-        return
-
-    # jenkins.available and jenkins.jobs.ready and controllers > 0 from here on
-    if helpers.get_charmstore_token():
-        msg = ('Ready (controllers: {}; store: authenticated).'
-               .format(controllers))
-    else:
-        msg = ('Ready (controllers: {}; store: unauthenticated).'
-               .format(controllers))
-    hookenv.status_set('active', msg)
 
 
 def pip_install_from_git(version, wheelhouse, repo):
@@ -130,7 +108,7 @@ def install_jenkins_jobs(connected_jenkins):
                     jenkins_connection_info["admin_username"],
                     jenkins_connection_info["admin_password"])
     set_state("jenkins.jobs.ready")
-    hookenv.open_port(helpers.REST_PORT)
+    hookenv.open_port(REST_PORT)
     report_status()
 
 
@@ -153,7 +131,7 @@ def cleanup_jenkins():
 
     CIGateway.stop()
     remove_state("jenkins.jobs.ready")
-    hookenv.close_port(helpers.REST_PORT)
+    hookenv.close_port(REST_PORT)
     report_status()
 
 
@@ -183,7 +161,7 @@ def ci_connection_updated(jenkins, jenkins_changed):
     report_status()
 
 
-@when_file_changed(helpers.CONTROLLERS_LIST_FILE)
+@when_file_changed(CONTROLLERS_LIST_FILE)
 def controllers_updated():
     hookenv.log("Controllers file has changed")
     if is_state('ci-client.joined'):
@@ -193,15 +171,20 @@ def controllers_updated():
     report_status()
 
 
+@when('jenkins.available')
+def jenkins_available(jenkins):
+    report_status()
+
+
 def inform_client(client):
-    controllers = helpers.get_controllers()
-    token = helpers.get_charmstore_token()
+    controllers = get_controllers()
+    token = get_charmstore_token()
     if len(controllers) == 0 or not is_state('jenkins.available'):
         client.clear_ready()
     else:
         client.set_controllers(controllers)
-        client.set_port(helpers.REST_PORT)
-        client.set_rest_prefix(helpers.REST_PREFIX)
+        client.set_port(REST_PORT)
+        client.set_rest_prefix(REST_PREFIX)
         client.set_store_token(token)  # token may be empty; client will verify
         client.set_ready()
 
