@@ -58,7 +58,7 @@ function cleanup_model() {
 }
 trap cleanup_model EXIT
 
-env MATRIX_OUTPUT_DIR=/srv/artifacts cwr -F $CONTROLLER:test-cwr-$CHARM_NAME-$BUILD_NUMBER totest.yaml --results-dir /srv/artifacts --test-id $BUILD_NUMBER
+env MATRIX_OUTPUT_DIR=/srv/artifacts/{{charm_fname}}_in_{{bundle_fname}}/$BUILD_NUMBER cwr -F $CONTROLLER:test-cwr-$CHARM_NAME-$BUILD_NUMBER totest.yaml --results-dir /srv/artifacts --test-id $BUILD_NUMBER
 </command>
     </hudson.tasks.Shell>
   </builders>

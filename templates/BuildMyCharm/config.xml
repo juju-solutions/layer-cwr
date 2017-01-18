@@ -130,7 +130,7 @@ trap "${new_trap}" EXIT
 
 # Link cwr artifacts for visibility in the jenkins job
 ln -s /srv/artifacts/{{charm_fname}}_in_{{bundle_fname}}/$BUILD_NUMBER /var/lib/jenkins/jobs/$JOB_NAME/builds/$BUILD_NUMBER/archive
-env MATRIX_OUTPUT_DIR=/srv/artifacts cwr -F ${MODELS_TO_TEST} totest.yaml --results-dir /srv/artifacts --test-id $BUILD_NUMBER
+env MATRIX_OUTPUT_DIR=/srv/artifacts/{{charm_fname}}_in_{{bundle_fname}}/$BUILD_NUMBER cwr -F ${MODELS_TO_TEST} totest.yaml --results-dir /srv/artifacts --test-id $BUILD_NUMBER
 
 if [ ! -z "{{pushtochannel}}" ]
 then
