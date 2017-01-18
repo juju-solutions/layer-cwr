@@ -58,7 +58,10 @@ function cleanup_model() {
 }
 trap cleanup_model EXIT
 
-cwr -F $CONTROLLER:test-cwr-$CHARM_NAME-$BUILD_NUMBER totest.yaml --results-dir /srv/artifacts --test-id $BUILD_NUMBER
+ARTIFACTS_DIR=/srv/artifacts/{{charm_fname}}_in_{{bundle_fname}}/$BUILD_NUMBER
+mkdir -p ARTIFACTS_DIR
+ln -s $ARTIFACTS_DIR /var/lib/jenkins/jobs/$JOB_NAME/builds/$BUILD_NUMBER/archive
+env MATRIX_OUTPUT_DIR=$ARTIFACTS_DIR cwr -F $CONTROLLER:test-cwr-$CHARM_NAME-$BUILD_NUMBER totest.yaml --results-dir /srv/artifacts --test-id $BUILD_NUMBER
 </command>
     </hudson.tasks.Shell>
   </builders>
