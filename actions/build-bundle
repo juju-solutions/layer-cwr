@@ -1,0 +1,50 @@
+#!/usr/bin/env python3
+
+from charmhelpers.core import hookenv  # noqa: E402
+from charms.reactive import RelationBase  # noqa: E402
+from jenkins import Jenkins  # noqa: E402
+from os import getcwd
+
+
+def add_job():
+    '''
+    Adds a job to be triggered upon a commit on github
+
+    '''
+    jenkins_relation = (RelationBase.from_state('jenkins.available'))
+    jenkins_connection_info = jenkins_relation.get_connection_info()
+    jclient = Jenkins(jenkins_connection_info["jenkins_url"],
+                      jenkins_connection_info["admin_username"],
+                      jenkins_connection_info["admin_password"])
+
+    repo = hookenv.action_get("repo")
+    bundle_name = hookenv.action_get("bundle-name")
+    branch = hookenv.action_get("branch")
+    controller = hookenv.action_get("controller")
+    charm_home = getcwd()
+
+    rep = {"{{repo}}": repo,
+           "{{bundle_name}}": bundle_name,
+           "{{controller}}": controller or "",
+           "{{branch}}": branch,
+           "{{cwr_charm_home}}": charm_home}
+
+    # This job will get green if there are updates that can go to the bundle
+    template_path_source = "templates/BuildMyBundle/config-check.xml"
+    with open(template_path_source) as infile:
+        data = infile.read()
+        for src, target in rep.items():
+            data = data.replace(src, target)
+        jclient.create_job("check-bundle-{}".format(bundle_name), data)
+
+    # This job will "build" the bundle aka update, test, push to store
+    template_path_source = "templates/BuildMyBundle/config-build.xml"
+    with open(template_path_source) as infile:
+        data = infile.read()
+        for src, target in rep.items():
+            data = data.replace(src, target)
+        jclient.create_job("build-bundle-{}".format(bundle_name), data)
+
+
+if __name__ == "__main__":
+    add_job()
