@@ -107,7 +107,7 @@ with open('/tmp/bundles/{{bundle_fname}}/bundle.yaml', 'r') as fp:
     bundle = yaml.safe_load(fp)
 app = bundle.get('applications', bundle.get('services', {}))['{{bundle_app_name}}']
 app['charm'] = '/tmp/$OUTPUT_DIR/{{charmname}}'
-with open('/tmp/bundles/{{bundle_fname}}/bundle.yaml', 'w') as fp:
+with open('/tmp/bundles/{{bundle_fname}}/bundle-cwr.yaml', 'w') as fp:
     yaml.dump(bundle, fp)
 EOP
 }
@@ -120,7 +120,7 @@ python3 -c "$(update_bundle)"
 rm -f totest.yaml
 echo "bundle: /tmp/bundles/{{bundle_fname}}" &gt;&gt; totest.yaml
 echo "bundle_name: {{charmname}}_in_{{bundle_fname}}" &gt;&gt; totest.yaml
-echo "bundle_file: bundle.yaml" >> totest.yaml
+echo "bundle_file: bundle-cwr.yaml" >> totest.yaml
 
 # We want cwr json results to be transformed to xml even if cwr fails
 eval "function transform_results() { python3 {{charm_home}}/scripts/json2junit.py /srv/artifacts/ {{charm_fname}}_in_{{bundle_fname}} $BUILD_NUMBER  > $WORKSPACE/report.xml; }"
