@@ -1,10 +1,14 @@
+import sys
+sys.path.append('../lib')
+
 from json import dumps
 from flask import Flask, request, abort
 from jenkins import Jenkins
-from controller.helpers import REST_PORT, get_controllers, get_rest_path
+from utils import REST_PORT, get_controllers, get_rest_path
 from pathlib import Path
 import mimetypes
 import logging
+
 
 logging.basicConfig(filename='/var/log/cwr-server/cwr-server.log',
                     level=logging.INFO)
