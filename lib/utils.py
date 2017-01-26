@@ -1,13 +1,44 @@
 import base64
 import os
+import yaml
+import uuid
 from charmhelpers.core import hookenv
 from charms.reactive import is_state
 
 
+HOOK_TOKENS_LIST_FILE = "/var/lib/jenkins/tokens.yaml"
 CONTROLLERS_LIST_FILE = "/var/lib/jenkins/controller.names"
 REST_PORT = 5000
 REST_PREFIX = "ci"
 REST_VER = "v1.0"
+
+
+def get_hook_token(job_name):
+    tokens = {}
+    try:
+        with open(HOOK_TOKENS_LIST_FILE, "r+") as fp:
+            tokens = yaml.load(fp)
+    except IOError:
+        print("Tokens file will be created")
+
+    if not job_name in tokens:
+        tokens[job_name] = str(uuid.uuid4())
+        with open(HOOK_TOKENS_LIST_FILE, "w") as fp:
+            yaml.dump(tokens, fp)
+
+    return tokens[job_name]
+
+
+def validate_hook_token(job_name, token):
+    try:
+        with open(HOOK_TOKENS_LIST_FILE, "r+") as fp:
+            tokens = yaml.load(fp)
+    except IOError:
+        print("Tokens file not createed yet")
+
+    if not tokens or not job_name in tokens:
+        return False
+    return tokens[job_name] == token
 
 
 def get_charmstore_token(decode=True):

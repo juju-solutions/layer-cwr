@@ -4,7 +4,7 @@ sys.path.append('../lib')
 from json import dumps
 from flask import Flask, request, abort
 from jenkins import Jenkins
-from utils import REST_PORT, get_controllers, get_rest_path
+from utils import REST_PORT, get_controllers, get_rest_path, validate_hook_token
 from pathlib import Path
 import mimetypes
 import logging
@@ -106,6 +106,21 @@ def trigger_job():
               'CHARM_NAME': juju_artifact,
               'BUILD_CHARM_TARGET': build_target}
     jclient.build_job("RunCwr",  params)
+    return str(next_build_number)
+
+
+#
+# Trigger job based on id
+#
+@app.route(rest_path + "/trigger/<string:job>/<string:token>", methods=['POST'])
+def trigger_job_from_webhook(job, token):
+
+    if not validate_hook_token(job, token):
+        raise Exception("Not a valid token")
+
+    jclient = get_jenkins_client()
+    next_build_number = jclient.get_job_info(job)['nextBuildNumber']
+    jclient.build_job(job)
     return str(next_build_number)
 
 
