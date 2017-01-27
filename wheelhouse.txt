@@ -1,7 +1,6 @@
 PyYAML==3.11
 flask
 pathlib>=1.0.0,<2.0.0
-charms.reactive>=0.4.5,<5.0.0
 jujubigdata>=7.0.0,<8.0.0
 python-jenkins>=0.4.13,<1.0.0
 theblues
