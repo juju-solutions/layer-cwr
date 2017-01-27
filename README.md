@@ -64,7 +64,9 @@ following parameters:
   - reference-bundle: Charm store URL of a bundle to use to test the
     given charm (e.g.: `cs:bundle/mediawiki-single`).
     If this is not provided, the charm must set it in its tests.yaml.
-  - controller: Name of the controller to use for running the tests
+  - controller (optional): Name of the controller to use for running the tests.
+    If you do not specify a controller tests will run on all registered
+    controllers.
 
 Should you decide to release a charm after a successful test, you can also
 specify:
@@ -83,16 +85,20 @@ An example run of this action might look like this:
       controller=lxd
 
 Running this action will result in a new job in Jenkins called
-`charm-<charmname>` that will poll the repository once every 5 minutes. In case
-new commits are found, bundletester will test your charm and the result will be
-pushed to the store (again, given you have opted in).
+`charm-<charmname>`. This job is triggered by a webhook that is available in the
+output of the action. You will need to add this webhook under Settings->Webhooks
+of your github repository.
+
+    juju show-action-output <action_id>
+
 
 ## Build on Release
 
 If you want to drive your releases using tags directly from github, call the
 `build-on-release` juju action. This job has the same set of parameters as
 above but the ending jenkins job will build/test/push your charm only if you
-add a tag to your github repository.
+add a tag to your github repository. Again, setting a webhook on your github
+repository is required.
 
 Combining the two jobs gives you a basic yet powerful CI workflow.
 
