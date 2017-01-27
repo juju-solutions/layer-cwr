@@ -4,6 +4,15 @@
   <description></description>
   <keepDependencies>false</keepDependencies>
   <properties>
+    <hudson.model.ParametersDefinitionProperty>
+      <parameterDefinitions>
+        <hudson.model.StringParameterDefinition>
+          <name>RELEASE_TAG</name>
+          <description>Tag to be build (optional)</description>
+          <defaultValue></defaultValue>
+        </hudson.model.StringParameterDefinition>
+      </parameterDefinitions>
+    </hudson.model.ParametersDefinitionProperty>
     <com.coravy.hudson.plugins.github.GithubProjectProperty plugin="github@1.24.0">
       <projectUrl>{{gitrepo}}</projectUrl>
       <displayName></displayName>
@@ -13,7 +22,6 @@
     <configVersion>2</configVersion>
     <userRemoteConfigs>
       <hudson.plugins.git.UserRemoteConfig>
-        {{refspec}}
         <url>{{gitrepo}}</url>
       </hudson.plugins.git.UserRemoteConfig>
     </userRemoteConfigs>
@@ -36,6 +44,12 @@
     <hudson.tasks.Shell>
       <command>#!/bin/bash
 set -ex
+
+if [ ! -z $RELEASE_TAG ]
+then
+    echo "Moving to relase tag $RELEASE_TAG"
+    git checkout $RELEASE_TAG
+fi
 
 export JUJU_REPOSITORY=&quot;/tmp/&quot;
 OUTPUT_DIR="builds"

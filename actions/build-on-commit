@@ -45,7 +45,6 @@ def add_job():
            "{{bundle_name}}": bundle_name,
            "{{bundle_fname}}": bundle_fname,
            "{{bundle_app_name}}": bundle_app_name,
-           "{{refspec}}": "",
            "{{series}}": hookenv.action_get("series") or "",
            "{{controller}}": hookenv.action_get("controller") or "",
            "{{charm_home}}": getcwd(),
@@ -62,7 +61,7 @@ def add_job():
         except JenkinsException as e:
             cwrhelpers.fail_action(str(e))
     token = get_hook_token(job_name)
-    url = "http://<Jenkins_URL>:{}{}/trigger/{}/{}".format(REST_PORT,
+    url = "http://<Jenkins_machine>:{}{}/trigger/{}/{}".format(REST_PORT,
                                                          get_rest_path(),
                                                          job_name,
                                                          token)

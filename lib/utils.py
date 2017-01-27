@@ -30,13 +30,14 @@ def get_hook_token(job_name):
 
 
 def validate_hook_token(job_name, token):
+    tokens = {}
     try:
-        with open(HOOK_TOKENS_LIST_FILE, "r+") as fp:
+        with open(HOOK_TOKENS_LIST_FILE, "r") as fp:
             tokens = yaml.load(fp)
     except IOError:
-        print("Tokens file not createed yet")
+        print("Tokens file not created yet")
 
-    if not tokens or not job_name in tokens:
+    if not job_name in tokens:
         return False
     return tokens[job_name] == token
 
