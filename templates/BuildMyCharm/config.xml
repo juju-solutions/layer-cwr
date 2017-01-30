@@ -48,6 +48,7 @@ if [ ! -f "first-run.lock" ]; then
   exit 0
 fi
 
+export PATH=$PATH:/usr/local/lib/juju-plugins
 export JUJU_REPOSITORY=&quot;/tmp/&quot;
 OUTPUT_DIR="builds"
 SERIES_FLAG=""

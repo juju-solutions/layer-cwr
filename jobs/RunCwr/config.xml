@@ -34,6 +34,8 @@
   <builders>
     <hudson.tasks.Shell>
       <command>#!/bin/bash
+export PATH=$PATH:/usr/local/lib/juju-plugins
+
 touch totest.yaml
 echo &quot;bundle: $BUILD_CHARM_TARGET&quot; &gt;&gt; totest.yaml
 echo &quot;bundle_name: $CHARM_NAME&quot; &gt;&gt; totest.yaml
