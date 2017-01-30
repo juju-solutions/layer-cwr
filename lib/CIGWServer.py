@@ -1,13 +1,18 @@
 import sys
 sys.path.append('../lib')
 
-from json import dumps, loads
-from flask import Flask, request, abort
-from jenkins import Jenkins
-from utils import REST_PORT, get_controllers, get_rest_path, validate_hook_token
-from pathlib import Path
-import mimetypes
-import logging
+from json import dumps, loads  # noqa: E402
+from flask import Flask, request, abort  # noqa: E402
+from jenkins import Jenkins  # noqa: E402
+from utils import (
+    REST_PORT,
+    get_controllers,
+    get_rest_path,
+    validate_hook_token
+)  # noqa: E402
+from pathlib import Path  # noqa: E402
+import mimetypes  # noqa: E402
+import logging  # noqa: E402
 
 
 logging.basicConfig(filename='/var/log/cwr-server/cwr-server.log',
@@ -112,9 +117,9 @@ def trigger_job():
 #
 # Trigger job based on id
 #
-@app.route(rest_path + "/trigger/<string:job>/<string:token>", methods=['POST'])
+@app.route(rest_path + "/trigger/<string:job>/<string:token>",
+           methods=['POST'])
 def trigger_job_from_webhook(job, token):
-
 
     if not validate_hook_token(job, token):
         abort(400)

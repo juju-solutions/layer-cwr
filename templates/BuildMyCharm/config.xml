@@ -22,6 +22,7 @@
     <configVersion>2</configVersion>
     <userRemoteConfigs>
       <hudson.plugins.git.UserRemoteConfig>
+        {{refspec}}
         <url>{{gitrepo}}</url>
       </hudson.plugins.git.UserRemoteConfig>
     </userRemoteConfigs>
@@ -38,12 +39,16 @@
   <disabled>false</disabled>
   <blockBuildWhenDownstreamBuilding>false</blockBuildWhenDownstreamBuilding>
   <blockBuildWhenUpstreamBuilding>false</blockBuildWhenUpstreamBuilding>
-  <triggers/>
+  <triggers>
+      {{trigger}}
+  </triggers>
   <concurrentBuild>false</concurrentBuild>
   <builders>
     <hudson.tasks.Shell>
       <command>#!/bin/bash
 set -ex
+
+{{skip-builds}}
 
 if [ ! -z $RELEASE_TAG ]
 then

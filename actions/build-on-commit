@@ -11,7 +11,13 @@ from charms.reactive import RelationBase  # noqa: E402
 import cwrhelpers  # noqa: E402
 from jenkins import Jenkins, JenkinsException  # noqa: E402
 from os import getcwd
-from utils import get_hook_token, get_rest_path, REST_PORT  # noqa: E402
+from utils import (
+    get_hook_token,
+    get_rest_path,
+    REST_PORT,
+    TRIGGER_PERIODICALLY,
+    SKIP_BUILDS
+)  # noqa: E402
 
 
 def add_job():
@@ -35,6 +41,12 @@ def add_job():
         cwrhelpers.fail_action('Charm does not provide reference bundle '
                                'and none was provided to action')
 
+    repo_access = hookenv.action_get("repo-access")
+    if repo_access not in ['webhooks', 'poll']:
+        cwrhelpers.fail_action('The repo-access can only be \'webhooks\' or \'poll\'')
+
+    trigger, skip_builds = "", "" if repo_access == 'webhooks' else TRIGGER_PERIODICALLY, SKIP_BUILDS
+
     rep = {"{{gitrepo}}": hookenv.action_get("repo"),
            "{{charm_subdir}}": hookenv.action_get("charm-subdir"),
            "{{pushtochannel}}": hookenv.action_get("push-to-channel") or "",
@@ -45,9 +57,12 @@ def add_job():
            "{{bundle_name}}": bundle_name,
            "{{bundle_fname}}": bundle_fname,
            "{{bundle_app_name}}": bundle_app_name,
+           "{{refspec}}": "",
            "{{series}}": hookenv.action_get("series") or "",
            "{{controller}}": hookenv.action_get("controller") or "",
            "{{charm_home}}": getcwd(),
+           "{{trigger}}": trigger,
+           "{{skip_builds}}": skip_builds,
            }
 
     template_path_source = "templates/BuildMyCharm/config.xml"
@@ -65,7 +80,13 @@ def add_job():
                                                          get_rest_path(),
                                                          job_name,
                                                          token)
-    hookenv.action_set({'hook.url': url})
+
+    # Need to trigger the job fir the first time in case of poll
+    # or return the webhook
+    if repo_access == 'poll':
+        jclient.build_job(job_name)
+    else:
+        hookenv.action_set({'hook.url': url})
 
 
 if __name__ == "__main__":

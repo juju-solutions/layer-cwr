@@ -14,21 +14,26 @@ class TestBundlebuilder(unittest.TestCase):
         assert retcode is 0
 
     def test_raise(self):
+        help_cmd = ["python3", "scripts/bundlebuilder.py", "--help"]
         with self.assertRaises(Exception):
-            retcode, output = bundlebuilder.execute(["python3", "scripts/bundlebuilder.py", "--help"])
+            retcode, output = bundlebuilder.execute(help_cmd)
 
     def test_help(self):
-        retcode, output = bundlebuilder.execute(["python3", "scripts/bundlebuilder.py", "--help"],
+        help_cmd = ["python3", "scripts/bundlebuilder.py", "--help"]
+        retcode, output = bundlebuilder.execute(help_cmd,
                                                 raise_exception=False)
         assert retcode is 1
         assert "Usage:" in output
 
     @patch('scripts.bundlebuilder.execute')
     def test_bundle(self, execute_mock):
-        with patch("builtins.open", mock_open(read_data=self.bundle_yaml)) as mock_file:
-            bundle = bundlebuilder.Bundle("http://github/myrepo", "mybranch", "myci-info.yaml",
-                                          BT_dry_run=True, store_push_dry_run=True)
-            bundle.test(["mymodel", "mymodel2"])
+        with patch("builtins.open", mock_open(read_data=self.bundle_yaml)):
+            bundle = bundlebuilder.Bundle("http://github/myrepo",
+                                          "mybranch",
+                                          "myci-info.yaml",
+                                          CWR_dry_run=True,
+                                          store_push_dry_run=True)
+            bundle.test(1, ["mymodel", "mymodel2"])
             assert execute_mock.call_count is 2
 
     @patch('scripts.bundlebuilder.execute')
@@ -40,6 +45,7 @@ class TestBundlebuilder(unittest.TestCase):
         charm.release_latest("edge", "beta")
         print(execute_mock.call_count)
         assert execute_mock.call_count is 4
+
 
 if __name__ == "__main__":
     unittest.main()

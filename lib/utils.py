@@ -5,6 +5,30 @@ import uuid
 from charmhelpers.core import hookenv
 from charms.reactive import is_state
 
+TRIGGER_PERIODICALLY = '''
+    <hudson.triggers.SCMTrigger>
+      <spec>*/5 * * * *</spec>
+      <ignorePostCommitHooks>false</ignorePostCommitHooks>
+    </hudson.triggers.SCMTrigger>
+    '''
+
+SKIP_BUILDS = '''
+if [ ! -f "first-run.lock" ]; then
+  touch "first-run.lock"
+  echo "First run automatically triggered. Skipped."
+  touch results.xml
+  exit 0
+fi
+
+if test `find "first-run.lock" -min -1`
+then
+  echo "Skip build. Caused by tag already present in repo."
+  touch results.xml
+  exit 0
+fi
+'''
+
+REFSPEC = "<refspec>+refs/tags/*:refs/remotes/origin/tags/*</refspec>"
 
 HOOK_TOKENS_LIST_FILE = "/var/lib/jenkins/tokens.yaml"
 CONTROLLERS_LIST_FILE = "/var/lib/jenkins/controller.names"
@@ -21,7 +45,7 @@ def get_hook_token(job_name):
     except IOError:
         print("Tokens file will be created")
 
-    if not job_name in tokens:
+    if job_name not in tokens:
         tokens[job_name] = str(uuid.uuid4())
         with open(HOOK_TOKENS_LIST_FILE, "w") as fp:
             yaml.dump(tokens, fp)
@@ -37,7 +61,7 @@ def validate_hook_token(job_name, token):
     except IOError:
         print("Tokens file not created yet")
 
-    if not job_name in tokens:
+    if job_name not in tokens:
         return False
     return tokens[job_name] == token
 
