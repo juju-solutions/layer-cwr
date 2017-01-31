@@ -1,18 +1,19 @@
+from json import dumps, loads
+from flask import Flask, request, abort
+from jenkins import Jenkins
+from pathlib import Path
+import mimetypes
+import logging
+
 import sys
 sys.path.append('../lib')
 
-from json import dumps, loads  # noqa: E402
-from flask import Flask, request, abort  # noqa: E402
-from jenkins import Jenkins  # noqa: E402
 from utils import (
     REST_PORT,
     get_controllers,
     get_rest_path,
     validate_hook_token
 )  # noqa: E402
-from pathlib import Path  # noqa: E402
-import mimetypes  # noqa: E402
-import logging  # noqa: E402
 
 
 logging.basicConfig(filename='/var/log/cwr-server/cwr-server.log',
