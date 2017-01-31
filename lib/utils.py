@@ -1,3 +1,4 @@
+import time
 import base64
 import os
 import yaml
@@ -20,7 +21,7 @@ if [ ! -f "first-run.lock" ]; then
   exit 0
 fi
 
-if test `find "first-run.lock" -min -1`
+if test `find "first-run.lock" -mmin -1`
 then
   echo "Skip build. Caused by tag already present in repo."
   touch results.xml
@@ -35,6 +36,16 @@ CONTROLLERS_LIST_FILE = "/var/lib/jenkins/controller.names"
 REST_PORT = 5000
 REST_PREFIX = "ci"
 REST_VER = "v1.0"
+
+
+def trigger_jenkins_job(jclient, job, attempts = 5):
+    params = {'BUILD_TAG': ""}
+    name = jclient.get_job_name(job)
+    attempt = 1
+    while name == None and attempt < attempts:
+        time.sleep(10)
+        name = jclient.get_job_name(job)
+    jclient.build_job(job, params)
 
 
 def get_hook_token(job_name):

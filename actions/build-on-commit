@@ -12,6 +12,7 @@ import cwrhelpers  # noqa: E402
 from jenkins import Jenkins, JenkinsException  # noqa: E402
 from os import getcwd
 from utils import (
+    trigger_jenkins_job,
     get_hook_token,
     get_rest_path,
     REST_PORT,
@@ -42,10 +43,14 @@ def add_job():
                                'and none was provided to action')
 
     repo_access = hookenv.action_get("repo-access")
-    if repo_access not in ['webhooks', 'poll']:
+    if repo_access == 'webhooks':
+        trigger = ""
+        skip_builds = ""
+    elif repo_access == 'poll':
+        trigger = TRIGGER_PERIODICALLY
+        skip_builds = SKIP_BUILDS
+    else:
         cwrhelpers.fail_action('The repo-access can only be \'webhooks\' or \'poll\'')
-
-    trigger, skip_builds = "", "" if repo_access == 'webhooks' else TRIGGER_PERIODICALLY, SKIP_BUILDS
 
     rep = {"{{gitrepo}}": hookenv.action_get("repo"),
            "{{charm_subdir}}": hookenv.action_get("charm-subdir"),
@@ -84,7 +89,7 @@ def add_job():
     # Need to trigger the job fir the first time in case of poll
     # or return the webhook
     if repo_access == 'poll':
-        jclient.build_job(job_name)
+        trigger_jenkins_job(jclient, job_name)
     else:
         hookenv.action_set({'hook.url': url})
 

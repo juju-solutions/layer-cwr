@@ -48,7 +48,7 @@
       <command>#!/bin/bash
 set -ex
 
-{{skip-builds}}
+{{skip_builds}}
 
 if [ ! -z $RELEASE_TAG ]
 then
