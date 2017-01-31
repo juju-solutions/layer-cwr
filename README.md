@@ -1,4 +1,6 @@
 # Overview
+[![Build Status](https://travis-ci.org/juju-solutions/layer-cwr.svg?branch=master)](https://travis-ci.org/juju-solutions/layer-cwr)
+[![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 
 This subordinate charm prepares a Jenkins master node to test Juju artifacts
 (charms and bundles).
