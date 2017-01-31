@@ -65,7 +65,7 @@ class Bundle(object):
             with open("{}/ci-info.yaml".format(self.tempdir), 'r+') as stream:
                 self.ci_info = safe_load(stream)
         else:
-            self.ci_info = dict() # or load some default ci_info
+            self.ci_info = dict()  # or load some default ci_info
 
         self.location = "cs:~{}/{}".format(self.ci_info['bundle']['namespace'], self.ci_info['bundle']['name'])
         self.upgraded = False
@@ -225,10 +225,10 @@ class Bundle(object):
 
         cmd = list(self.CWR_command)
         cmd += ["-F"]
-        cmd += models
-        cmd += ["totest.yaml"]
         cmd += ["--results-dir", "/srv/artifacts"]
         cmd += ["--test-id", build_num]
+        cmd += models
+        cmd += ["totest.yaml"]
         execute(cmd)
 
     def release(self):
