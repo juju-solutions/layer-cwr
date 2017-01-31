@@ -67,6 +67,10 @@ following parameters:
   - controller (optional): Name of the controller to use for running the tests.
     If you do not specify a controller tests will run on all registered
     controllers.
+  - repo-access (optional): 'webhook' or 'poll'. By default the `build-on-commit`
+    will produce a URL to be used as a webhook that will trigger the build.
+    Alternatively you can set repo-access to 'poll' to periodically
+    (once every 5 minutes) to poll the repository for changes.
 
 Should you decide to release a charm after a successful test, you can also
 specify:
@@ -85,11 +89,28 @@ An example run of this action might look like this:
       controller=lxd
 
 Running this action will result in a new job in Jenkins called
-`charm-<charmname>`. This job is triggered by a webhook that is available in the
-output of the action. You will need to add this webhook under Settings->Webhooks
-of your github repository.
+`charm-<charmname>`. You can have the job triggered  externally through a web hook
+or you can set periodic polling of your repository via the "repo-access"
+action parameter:
 
-    juju show-action-output <action_id>
+  - webhook: the `build-on-commit` action will output a web hook that you can use
+    to trigger the build of your repository. You can get the output of the
+    action with:
+
+        juju show-action-output <action_id>
+
+    Should the action succeed the webhook url produced will have the following format:
+
+        http://<jenkins_machine>:5000/ci/v1.0/trigger/<charm-<charmname>>/<uuid>
+
+    You will need to add this webhook under Settings->Webhooks
+    of your github repository.
+
+  - poll: when setting "repo-access" to 'poll' the jenkins job produced by
+    the `build-on-commit` action will poll your github repository for changes.
+    Note that in this repo-access mode this charm will immediately trigger the
+    an initial execution the jenkins jobs. This is required so that successive
+    polls will correctly compute the source code delta from the previous poll.
 
 
 ## Build on Release
@@ -97,8 +118,9 @@ of your github repository.
 If you want to drive your releases using tags directly from github, call the
 `build-on-release` juju action. This job has the same set of parameters as
 above but the ending jenkins job will build/test/push your charm only if you
-add a tag to your github repository. Again, setting a webhook on your github
-repository is required.
+add a tag to your github repository. Note that calling this action with
+"repo-access" set to poll you will see as many initial jenkins job executions
+as the number of release tags already present in your repository.
 
 Combining the two jobs gives you a basic yet powerful CI workflow.
 
@@ -109,7 +131,7 @@ Combining the two jobs gives you a basic yet powerful CI workflow.
 
 With the `build-bundle` action you are able to update your bundles using the
 charms already released on the channels of the Juju store.
-`build-bundle` action takes the follwoing parameters:
+`build-bundle` action takes the following parameters:
   - repo: The github repo of the bundle
   - branch (optional): The branch of the github repo where the bundle is.
   - bundle-name: The name of the bundle
