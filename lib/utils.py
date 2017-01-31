@@ -38,11 +38,11 @@ REST_PREFIX = "ci"
 REST_VER = "v1.0"
 
 
-def trigger_jenkins_job(jclient, job, attempts = 5):
+def trigger_jenkins_job(jclient, job, attempts=5):
     params = {'BUILD_TAG': ""}
     name = jclient.get_job_name(job)
     attempt = 1
-    while name == None and attempt < attempts:
+    while name is None and attempt < attempts:
         time.sleep(10)
         name = jclient.get_job_name(job)
     jclient.build_job(job, params)
