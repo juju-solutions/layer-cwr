@@ -4,6 +4,15 @@
   <description></description>
   <keepDependencies>false</keepDependencies>
   <properties>
+    <hudson.model.ParametersDefinitionProperty>
+      <parameterDefinitions>
+        <hudson.model.StringParameterDefinition>
+          <name>RELEASE_TAG</name>
+          <description>Tag to be build (optional)</description>
+          <defaultValue></defaultValue>
+        </hudson.model.StringParameterDefinition>
+      </parameterDefinitions>
+    </hudson.model.ParametersDefinitionProperty>
     <com.coravy.hudson.plugins.github.GithubProjectProperty plugin="github@1.24.0">
       <projectUrl>{{gitrepo}}</projectUrl>
       <displayName></displayName>
@@ -31,21 +40,20 @@
   <blockBuildWhenDownstreamBuilding>false</blockBuildWhenDownstreamBuilding>
   <blockBuildWhenUpstreamBuilding>false</blockBuildWhenUpstreamBuilding>
   <triggers>
-    <hudson.triggers.SCMTrigger>
-      <spec>*/5 * * * *</spec>
-      <ignorePostCommitHooks>false</ignorePostCommitHooks>
-    </hudson.triggers.SCMTrigger>
+      {{trigger}}
   </triggers>
   <concurrentBuild>false</concurrentBuild>
   <builders>
     <hudson.tasks.Shell>
       <command>#!/bin/bash
 set -ex
-if [ ! -f "first-run.lock" ]; then
-  touch "first-run.lock"
-  echo "First run automaticaly triggered. Skipped."
-  touch results.xml
-  exit 0
+
+{{skip_builds}}
+
+if [ ! -z $RELEASE_TAG ]
+then
+    echo "Moving to relase tag $RELEASE_TAG"
+    git checkout $RELEASE_TAG
 fi
 
 export JUJU_REPOSITORY=&quot;/tmp/&quot;

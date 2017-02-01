@@ -1,4 +1,4 @@
-from json import dumps
+from json import dumps, loads
 from flask import Flask, request, abort
 from jenkins import Jenkins
 from pathlib import Path
@@ -8,7 +8,12 @@ import logging
 import sys
 sys.path.append('../lib')
 
-from utils import REST_PORT, get_controllers, get_rest_path  # noqa: E402
+from utils import (
+    REST_PORT,
+    get_controllers,
+    get_rest_path,
+    validate_hook_token
+)  # noqa: E402
 
 
 logging.basicConfig(filename='/var/log/cwr-server/cwr-server.log',
@@ -107,6 +112,35 @@ def trigger_job():
               'CHARM_NAME': juju_artifact,
               'BUILD_CHARM_TARGET': build_target}
     jclient.build_job("RunCwr",  params)
+    return str(next_build_number)
+
+
+#
+# Trigger job based on id
+#
+@app.route(rest_path + "/trigger/<string:job>/<string:token>",
+           methods=['POST'])
+def trigger_job_from_webhook(job, token):
+
+    if not validate_hook_token(job, token):
+        abort(400)
+
+    if request.headers.get('X-GitHub-Event') == 'ping':
+        return "pong"
+
+    datastr = request.form['payload']
+    data = loads(datastr)
+    if data and "release" in data:
+        tag_name = data['release']['tag_name']
+    else:
+        tag_name = ""
+
+    if request.headers.get('X-GitHub-Event') == 'release' and tag_name == '':
+        abort(400)
+
+    jclient = get_jenkins_client()
+    next_build_number = jclient.get_job_info(job)['nextBuildNumber']
+    jclient.build_job(job, {'RELEASE_TAG': tag_name})
     return str(next_build_number)
 
 

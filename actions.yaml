@@ -54,6 +54,10 @@ build-on-commit:
             description: Series (eg xenial, trusty) if not specified by the charm.
             type: string
             default: ""
+        repo-access:
+            description: Set this to 'wehooks' or 'poll'.
+            default: "webhooks"
+            type: string
     required: ['charm-name', 'repo']
 build-on-release:
     description: Add a job that would build a charm upon release.
@@ -90,6 +94,10 @@ build-on-release:
             description: Series (eg xenial, trusty) if not specified by the charm.
             type: string
             default: ""
+        repo-access:
+            description: Set this to 'wehooks' or 'poll'.
+            default: "webhooks"
+            type: string
     required: ['charm-name', 'repo']
 store-login:
     description: Initialise session with the Juju store.

@@ -11,6 +11,14 @@ from charms.reactive import RelationBase  # noqa: E402
 import cwrhelpers  # noqa: E402
 from jenkins import Jenkins, JenkinsException  # noqa: E402
 from os import getcwd
+from utils import (
+    trigger_jenkins_job,
+    get_hook_token,
+    get_rest_path,
+    REST_PORT,
+    TRIGGER_PERIODICALLY,
+    SKIP_BUILDS
+)  # noqa: E402
 
 
 def add_job():
@@ -34,6 +42,16 @@ def add_job():
         cwrhelpers.fail_action('Charm does not provide reference bundle '
                                'and none was provided to action')
 
+    repo_access = hookenv.action_get("repo-access")
+    if repo_access == 'webhooks':
+        trigger = ""
+        skip_builds = ""
+    elif repo_access == 'poll':
+        trigger = TRIGGER_PERIODICALLY
+        skip_builds = SKIP_BUILDS
+    else:
+        cwrhelpers.fail_action('The repo-access can only be \'webhooks\' or \'poll\'')
+
     rep = {"{{gitrepo}}": hookenv.action_get("repo"),
            "{{charm_subdir}}": hookenv.action_get("charm-subdir"),
            "{{pushtochannel}}": hookenv.action_get("push-to-channel") or "",
@@ -48,17 +66,32 @@ def add_job():
            "{{series}}": hookenv.action_get("series") or "",
            "{{controller}}": hookenv.action_get("controller") or "",
            "{{charm_home}}": getcwd(),
+           "{{trigger}}": trigger,
+           "{{skip_builds}}": skip_builds,
            }
 
     template_path_source = "templates/BuildMyCharm/config.xml"
+    job_name = "charm-{}".format(charm_fname)
     with open(template_path_source) as infile:
         data = infile.read()
         for src, target in rep.items():
             data = data.replace(src, target)
         try:
-            jclient.create_job("charm-{}".format(charm_fname), data)
+            jclient.create_job(job_name, data)
         except JenkinsException as e:
             cwrhelpers.fail_action(str(e))
+    token = get_hook_token(job_name)
+    url = "http://<Jenkins_machine>:{}{}/trigger/{}/{}".format(REST_PORT,
+                                                         get_rest_path(),
+                                                         job_name,
+                                                         token)
+
+    # Need to trigger the job fir the first time in case of poll
+    # or return the webhook
+    if repo_access == 'poll':
+        trigger_jenkins_job(jclient, job_name)
+    else:
+        hookenv.action_set({'hook.url': url})
 
 
 if __name__ == "__main__":
