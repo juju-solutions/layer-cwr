@@ -243,12 +243,16 @@ class Bundle(object):
 
         cmd = list(self.charm_command)
         cmd += ["push", self.tempdir, self.location]
-        cmd += ["--channel", self.ci_info['bundle']['to-channel']]
         execute(cmd)
 
-        _, output = execute(["charm", "show", self.location, "-c", self.ci_info['bundle']['to-channel'], "id"])
+        _, output = execute(["charm", "show", self.location, "-c", "unpublished", "id"])
         latest = safe_load(output)
         just_released = latest['id']['Id']
+
+        cmd = list(self.charm_command)
+        cmd += ["release", just_released]
+        cmd += ["--channel", self.ci_info['bundle']['to-channel']]
+        execute(cmd)
 
         cmd = list(self.charm_command)
         cmd += ["grant", just_released]
