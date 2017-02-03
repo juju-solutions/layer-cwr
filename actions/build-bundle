@@ -29,14 +29,6 @@ def add_job():
            "{{branch}}": branch,
            "{{cwr_charm_home}}": charm_home}
 
-    # This job will get green if there are updates that can go to the bundle
-    template_path_source = "templates/BuildMyBundle/config-check.xml"
-    with open(template_path_source) as infile:
-        data = infile.read()
-        for src, target in rep.items():
-            data = data.replace(src, target)
-        jclient.create_job("check-bundle-{}".format(bundle_name), data)
-
     # This job will "build" the bundle aka update, test, push to store
     template_path_source = "templates/BuildMyBundle/config-build.xml"
     with open(template_path_source) as infile:
