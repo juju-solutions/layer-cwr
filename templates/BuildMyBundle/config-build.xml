@@ -14,7 +14,6 @@
   <builders>
     <hudson.tasks.Shell>
       <command>#!/bin/bash
-
 # Keep track of the controllers and models we want CWR to run
 CONTROLLERS=""
 MODELS_TO_TEST=""
@@ -26,6 +25,9 @@ then
 else
     CONTROLLERS={{controller}}
 fi
+
+# Create an empty unit tests results file in case the bundle does not produce any
+touch results.xml
 
 for controller in $CONTROLLERS
 do
@@ -56,10 +58,23 @@ do
     trap "${new_trap}" EXIT
 done
 
-ln -s /srv/artifacts/{{bundle_name}}/$BUILD_NUMBER /var/lib/jenkins/jobs/$JOB_NAME/builds/$BUILD_NUMBER/archive
+# Link cwr artifacts for visibility in the jenkins job
+ARTIFACTS_DIR=/srv/artifacts/{{bundle_name}}/$BUILD_NUMBER
+mkdir -p $ARTIFACTS_DIR
+ln -s $ARTIFACTS_DIR /var/lib/jenkins/jobs/$JOB_NAME/builds/$BUILD_NUMBER/archive
+export MATRIX_OUTPUT_DIR=$ARTIFACTS_DIR
 python3 -u {{cwr_charm_home}}/scripts/bundlebuilder.py build {{repo}} {{branch}} $BUILD_NUMBER $MODELS_TO_TEST
 </command>
     </hudson.tasks.Shell>
   </builders>
+  <publishers>
+    <hudson.tasks.junit.JUnitResultArchiver plugin="junit@1.19">
+      <testResults>*.xml</testResults>
+      <keepLongStdio>false</keepLongStdio>
+      <healthScaleFactor>1.0</healthScaleFactor>
+      <allowEmptyResults>false</allowEmptyResults>
+    </hudson.tasks.junit.JUnitResultArchiver>
+  </publishers>
+
   <buildWrappers/>
 </project>
