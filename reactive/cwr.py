@@ -96,7 +96,7 @@ def install_jenkins_jobs(connected_jenkins):
                 configxml = jobfile.read()
                 jclient.create_job(subdirname, configxml)
 
-    plugins = ["github", "ghprb", "postbuildscript"]
+    plugins = ["github", "ghprb", "postbuildscript", "scripttrigger"]
     for plugin in plugins:
         hookenv.status_set('maintenance', 'Installing plugin {}.'
                            .format(plugin))
