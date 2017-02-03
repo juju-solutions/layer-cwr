@@ -405,8 +405,6 @@ class Coordinator(object):
             print("Charms in bundle {}".format(charms))
             for charm in charms:
                 c = Charm(charm)
-                print("{}".format(c.get_name()))
-                print("Latest {}".format(c.get_latest("stable")))
                 upgrade_info = bundle.get_charms_upgrade_policy(c.get_name())
                 if upgrade_info:
                     print("Upgrading {}".format(charm))
