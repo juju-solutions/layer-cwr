@@ -65,7 +65,15 @@ then
     SERIES_FLAG="--series {{series}}"
 fi
 
-charm build $SERIES_FLAG "{{charm_subdir}}"
+# Build layered charms, copy non-layered charms to output dir
+if [ -f "layer.yaml" ]
+then
+    charm build $SERIES_FLAG "{{charm_subdir}}"
+else
+    mkdir -p $JUJU_REPOSITORY/$OUTPUT_DIR
+    rm -rf $JUJU_REPOSITORY/$OUTPUT_DIR/{{charmname}}
+    cp -a `pwd` $JUJU_REPOSITORY/$OUTPUT_DIR/{{charmname}}
+fi
 
 # Keep track of the controllers and models we want CWR to run
 CONTROLLERS=""
