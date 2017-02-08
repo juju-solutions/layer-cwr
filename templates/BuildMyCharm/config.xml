@@ -70,7 +70,9 @@ if [ -f "layer.yaml" ]
 then
     charm build $SERIES_FLAG "{{charm_subdir}}"
 else
-    cp -a `pwd` /tmp/$OUTPUT_DIR/{{charmname}}
+    mkdir -p $JUJU_REPOSITORY/$OUTPUT_DIR
+    rm -rf $JUJU_REPOSITORY/$OUTPUT_DIR/{{charmname}}
+    cp -a `pwd` $JUJU_REPOSITORY/$OUTPUT_DIR/{{charmname}}
 fi
 
 # Keep track of the controllers and models we want CWR to run
