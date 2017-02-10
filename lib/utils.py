@@ -110,6 +110,11 @@ def get_rest_path():
 
 
 def report_status():
+    if is_state('jenkins.jobs.failed'):
+        hookenv.status_set('blocked',
+                           'Initialisation failed. Please, redeploy cwr.')
+        return
+
     if not is_state('jenkins.available'):
         hookenv.status_set('waiting',
                            'Waiting for jenkins to become available.')

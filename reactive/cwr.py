@@ -79,7 +79,7 @@ def install_juju():
 
 
 @when('jenkins.available', 'juju-ci-env.installed')
-@when_not('jenkins.jobs.ready')
+@when_not('jenkins.jobs.ready', 'jenkins.jobs.failed')
 def install_jenkins_jobs(connected_jenkins):
     hookenv.status_set('maintenance', 'Uploading jenkins jobs.')
     jenkins_connection_info = connected_jenkins.get_connection_info()
@@ -107,6 +107,12 @@ def install_jenkins_jobs(connected_jenkins):
         if not installed:
             hookenv.log("installation of {} did not complete on time."
                         .format(plugin))
+            # Retrying does not play well here.
+            # I have seen a case where Jenkins mistakenly reports that
+            # the plugin is installed causing an infinite retry loop :(
+            # Here we report that jenkins failed and we block.
+            set_state("jenkins.jobs.failed")
+            return
 
     # Give some slack for syncing the plugins.
     time.sleep(15)
