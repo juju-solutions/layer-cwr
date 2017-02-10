@@ -27,11 +27,14 @@ class CIGateway:
                    'charm_dir': hookenv.charm_dir()
                })
 
+        subprocess.check_call(['systemctl', 'enable', 'cwr-server'])
         subprocess.check_call(['systemctl', 'daemon-reload'])
         host.service_start('cwr-server')
 
     @classmethod
     def stop(cls):
+        subprocess.check_call(['systemctl', 'disable', 'cwr-server'])
+        subprocess.check_call(['systemctl', 'daemon-reload'])
         host.service_stop('cwr-server')
 
     @classmethod

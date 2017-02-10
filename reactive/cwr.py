@@ -129,17 +129,23 @@ def cleanup_jenkins():
     '''
     hookenv.status_set('maintenance', 'Deleting jenkins jobs.')
 
+    CIGateway.stop()
+    hookenv.close_port(REST_PORT)
+
     # Since Jenkins is no more available. Ask the CIGateway to provide
     # a jenkins client (and hope Jenkins is still there)
-    jclient = CIGateway.get_current_jenkins()
+    # but we do not want to block the deployment either way
+    try:
+        jclient = CIGateway.get_current_jenkins()
 
-    for _, dirnames, _ in os.walk('jobs'):
-        for subdirname in dirnames:
-            jclient.delete_job(subdirname)
+        for _, dirnames, _ in os.walk('jobs'):
+            for subdirname in dirnames:
+                jclient.delete_job(subdirname)
+    except Exception as err:
+        hookenv.log("Got an exception while cleaning up.")
+        hookenv.log(err)
 
-    CIGateway.stop()
     remove_state("jenkins.jobs.ready")
-    hookenv.close_port(REST_PORT)
     report_status()
 
 
