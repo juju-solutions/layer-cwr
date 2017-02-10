@@ -60,7 +60,7 @@ def get_charm_names():
     CWR artifact naming.
     '''
     charm_name = hookenv.action_get("charm-name")
-    charm_fname = re.sub(r'[^a-zA-Z0-9]', '_', charm_name)
+    charm_fname = get_fname(charm_name)
     return charm_name, charm_fname
 
 
@@ -85,10 +85,14 @@ def get_reference_bundle():
             raise InvalidBundle(
                 bundle_name,
                 "Charm not found in bundle: {}".format(charm_name))
-        bundle_fname = re.sub(r'[^a-zA-Z0-9]', '_', bundle_name)
+        bundle_fname = get_fname(bundle_name)
         return bundle_name, bundle_fname, bundle_app_name
     else:
         return "", "", ""
+
+
+def get_fname(name):
+    return re.sub(r'[^a-zA-Z0-9]', '_', name)
 
 
 def fail_action(msg, output=None):

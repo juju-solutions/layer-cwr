@@ -50,6 +50,14 @@ set -ex
 
 {{skip_builds}}
 
+# Quick check repo points to a charm
+if [ ! -f "./{{charm_subdir}}/metadata.yaml" ]
+then
+    echo "metadata.yaml not found in repo provided."
+    echo "Please check the repo and charm-subdir point to the charm source."
+    exit 1
+fi
+
 if [ ! -z $RELEASE_TAG ]
 then
     echo "Moving to relase tag $RELEASE_TAG"
