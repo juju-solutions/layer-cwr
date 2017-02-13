@@ -109,6 +109,12 @@ def get_rest_path():
     return "/" + REST_PREFIX + "/" + REST_VER
 
 
+def get_badge_path(job):
+    """The path to a jobs build badge."""
+    rest = get_rest_path()
+    return "{}/build-output/{}/build-badge.svg".format(rest, job)
+
+
 def report_status():
     if not is_state('jenkins.available'):
         hookenv.status_set('waiting',

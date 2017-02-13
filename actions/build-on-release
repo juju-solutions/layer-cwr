@@ -15,6 +15,7 @@ from utils import (
     trigger_jenkins_job,
     get_hook_token,
     get_rest_path,
+    get_badge_path,
     REST_PORT,
     TRIGGER_PERIODICALLY,
     SKIP_BUILDS,
@@ -92,12 +93,18 @@ def add_job():
                                                                job_name,
                                                                token)
 
+    badge_url = "http://<Jenkins_machine>:{}{}".format(REST_PORT,
+                                                       get_badge_path(job_name))
+
     # Need to trigger the job fir the first time in case of poll
     # or return the webhook
     if repo_access == 'poll':
         trigger_jenkins_job(jclient, job_name)
     else:
         hookenv.action_set({'hook.url': url})
+
+    hookenv.action_set({'build.badge': badge_url})
+
 
 
 if __name__ == "__main__":

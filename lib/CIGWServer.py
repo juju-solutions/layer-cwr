@@ -1,5 +1,6 @@
+import os
 from json import dumps, loads
-from flask import Flask, request, abort
+from flask import Flask, request, abort, make_response
 from jenkins import Jenkins
 from pathlib import Path
 import mimetypes
@@ -12,6 +13,7 @@ from utils import (
     REST_PORT,
     get_controllers,
     get_rest_path,
+    get_badge_path,
     validate_hook_token
 )  # noqa: E402
 
@@ -83,8 +85,29 @@ def get_build_output(job_name, build_id):
     return dumps(build_info, sort_keys=True, separators=(',', ': '))
 
 
-@app.route("/ci/v1.0/build-artifacts/<string:job_name>/<int:build_id>/")
-@app.route("/ci/v1.0/build-artifacts/<string:job_name>/<int:build_id>/"
+@app.route(get_badge_path("<string:job_name>"))
+def get_build_svg_output(job_name):
+    jclient = get_jenkins_client()
+    last_build = jclient.get_job_info(job_name)['lastCompletedBuild']
+    # We might not have a first build yet
+    if not last_build:
+        svg_path = os.path.join(app.root_path, '../images', 'unknown.svg')
+    else:
+        last_build_number = last_build['number']
+        build_info = jclient.get_build_info(job_name, last_build_number)
+        if build_info['result'] == 'SUCCESS':
+            svg_path = os.path.join(app.root_path, '../images', 'pass.svg')
+        else:
+            svg_path = os.path.join(app.root_path, '../images', 'fail.svg')
+
+    svg = open(svg_path).read()
+    response = make_response(svg)
+    response.content_type = 'image/svg+xml'
+    return response
+
+
+@app.route(rest_path + "/build-artifacts/<string:job_name>/<int:build_id>/")
+@app.route(rest_path + "/build-artifacts/<string:job_name>/<int:build_id>/"
            "<string:filename>")
 def get_build_artifact(job_name, build_id, filename=None):
     charm_name = build_id[len('charm-'):]

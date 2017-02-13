@@ -10,6 +10,10 @@ from charms.reactive import RelationBase  # noqa: E402
 from jenkins import Jenkins  # noqa: E402
 from os import getcwd
 from cwrhelpers import get_fname
+from utils import (
+    REST_PORT,
+    get_badge_path,
+)  # noqa: E402
 
 
 def add_job():
@@ -38,12 +42,17 @@ def add_job():
 
     # This job will "build" the bundle aka update, test, push to store
     template_path_source = "templates/BuildMyBundle/config-build.xml"
+    job_name = "build-bundle-{}".format(bundle_name)
     with open(template_path_source) as infile:
         data = infile.read()
         for src, target in rep.items():
             data = data.replace(src, target)
-        jclient.create_job("build-bundle-{}".format(bundle_name), data)
+        jclient.create_job(job_name, data)
 
+    badge_url = "http://<Jenkins_machine>:{}{}".format(REST_PORT,
+                                                       get_badge_path(job_name))
+
+    hookenv.action_set({'build.badge': badge_url})
 
 if __name__ == "__main__":
     add_job()
