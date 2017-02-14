@@ -111,8 +111,7 @@ def get_rest_path():
 
 def get_badge_path(job):
     """The path to a jobs build badge."""
-    rest = get_rest_path()
-    return "{}/build-output/{}/build-badge.svg".format(rest, job)
+    return "/{}/build-badge.svg".format(job)
 
 
 def report_status():

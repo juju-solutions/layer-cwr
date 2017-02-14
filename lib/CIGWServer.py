@@ -1,4 +1,3 @@
-import os
 from json import dumps, loads
 from flask import Flask, request, abort, make_response
 from jenkins import Jenkins
@@ -9,6 +8,7 @@ import logging
 import sys
 sys.path.append('../lib')
 
+from charmhelpers.core import templating
 from utils import (
     REST_PORT,
     get_controllers,
@@ -87,20 +87,34 @@ def get_build_output(job_name, build_id):
 
 @app.route(get_badge_path("<string:job_name>"))
 def get_build_svg_output(job_name):
-    jclient = get_jenkins_client()
-    last_build = jclient.get_job_info(job_name)['lastCompletedBuild']
-    # We might not have a first build yet
-    if not last_build:
-        svg_path = os.path.join(app.root_path, '../images', 'unknown.svg')
-    else:
-        last_build_number = last_build['number']
-        build_info = jclient.get_build_info(job_name, last_build_number)
-        if build_info['result'] == 'SUCCESS':
-            svg_path = os.path.join(app.root_path, '../images', 'pass.svg')
-        else:
-            svg_path = os.path.join(app.root_path, '../images', 'fail.svg')
+    job_path = Path('/srv/artifacts') / job_name
+    report_file = None
+    if job_path.exists():
+        last_build = sorted(d for d in job_path.iterdir() if d.is_dir())[-1]
+        report_file = last_build / 'report.json'
+    templates_dir = str(Path(__file__).parent.parent / 'templates')
 
-    svg = open(svg_path).read()
+    # We might not have a first build yet
+    if not report_file or not report_file.exists():
+        context = {'results': []}
+    else:
+        context = loads(report_file.read_text())
+
+    results_args = request.args.get("results")
+    if results_args:
+        # allow overriding results for testing
+        context['results'] = []
+        for arg in results_args.split('_'):
+            provider, test_outcome = arg.split('-')
+            context['results'].append({
+                'provider': provider,
+                'test_outcome': test_outcome})
+
+    svg = templating.render(source='badge.svg',
+                            target=None,
+                            templates_dir=templates_dir,
+                            context=context)
+
     response = make_response(svg)
     response.content_type = 'image/svg+xml'
     return response

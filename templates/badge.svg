@@ -1,0 +1,78 @@
+{%- macro color(result) -%}
+{%-   if result == "PASS" -%}
+        #4c1
+{%-   endif -%}
+{%-   if result == "INFRA" -%}
+        #dfb317
+{%-   endif -%}
+{%-   if result == "FAIL" -%}
+        #e05d44
+{%-   endif -%}
+{%- endmacro -%}
+
+{%- macro separator_color(result) -%}
+{%-   if result == "PASS" -%}
+        #336600
+{%-   endif -%}
+{%-   if result == "INFRA" -%}
+        #996633
+{%-   endif -%}
+{%-   if result == "FAIL" -%}
+        #993366
+{%-   endif -%}
+{%- endmacro -%}
+
+{%- set char_width = 9 -%}
+{%- set padding_width = 5 -%}
+{%- if results -%}
+    {%- set num_chars = results|map(attribute='provider')|map('length')|sum -%}
+    {%- set num_sections = results|length -%}
+{%- else -%}
+    {%- set num_chars = "unknown"|length -%}
+    {%- set num_sections = 1 -%}
+{%- endif -%}
+{%- set total_char_width = num_chars * char_width -%}
+{%- set total_padding_width = num_sections * padding_width * 2 -%}
+{%- set total_width = 37 + total_char_width + total_padding_width -%}
+<svg xmlns="http://www.w3.org/2000/svg" width="{{total_width}}" height="20">
+    <linearGradient id="b" x2="0" y2="100%">
+        <stop offset="0" stop-color="#bbb" stop-opacity=".1"/>
+        <stop offset="1" stop-opacity=".1"/>
+    </linearGradient>
+    <clipPath id="a">
+        <rect width="{{total_width}}" height="20" rx="3" fill="#fff"/>
+    </clipPath>
+    <g clip-path="url(#a)">
+        <path fill="#555" d="M0 0h37v20H0z"/>
+        <path fill="#9f9f9f" d="M37 0h37v20H37z"/>
+        {% set c = {'x': 37} -%}{# dict is work-around for scoping rules in jinja #}
+        {%- for controller in results -%}
+        {%- set w = controller.provider|length * char_width + padding_width * 2 -%}
+        <path fill="{{ color(controller.test_outcome) }}" d="M{{c.x}} 0h{{w}}v20H{{c.x}}z"/>
+        <path fill="url(#b)" d="M{{c.x}} 0h{{w}}v20H{{c.x}}z"/>
+        {% if not loop.last -%}
+        <path stroke="{{separator_color(controller.test_outcome)}}" d="M{{c.x + w}} 0v20"/>
+        {% endif -%}
+        {%- if c.update({'x': c.x + w}) -%}{%- endif -%}{# "if" is work-around for scoping rules in jinja #}
+        {%- else -%}
+        {%- set w = total_char_width + total_padding_width -%}
+        <path fill="#9f9f9f" d="M37 0h{{w}}v20H37z"/>
+        <path fill="url(#b)" d="M0 0h{{w}}v20H0z"/>
+        {%- endfor %}
+    </g>
+    <g fill="#fff" text-anchor="middle" font-family="DejaVu Sans,Verdana,Geneva,sans-serif" font-size="11">
+        <text x="18.5" y="15" fill="#010101" fill-opacity=".3">cwr</text>
+        <text x="18.5" y="14">cwr</text>
+        {% set c = {'x': 37} -%}{# dict is work-around for scoping rules in jinja #}
+        {%- for controller in results -%}
+        {%- set w = controller.provider|length * char_width + padding_width * 2 -%}
+        <text x="{{c.x + w / 2}}" y="15" fill="#010101" fill-opacity=".3">{{ controller.provider }}</text>
+        <text x="{{c.x + w / 2}}" y="14">{{ controller.provider }}</text>
+        {% if c.update({'x': c.x + w}) -%}{%- endif %}{# "if" is work-around for scoping rules in jinja #}
+        {%- else -%}
+        {%- set w = total_char_width + total_padding_width -%}
+        <text x="{{37 + w / 2}}" y="15" fill="#010101" fill-opacity=".3">unknown</text>
+        <text x="{{37 + w / 2}}" y="14">unknown</text>
+        {%- endfor %}
+    </g>
+</svg>
