@@ -184,6 +184,29 @@ An example run of this action might look like this:
       controller=lxd
 
 
+# Build Badge
+
+The CI offers an SVG badge showing the current build status. The badge is intended for
+reporting eg in README files. Each jenkins job is has its own build badge URL
+printed as part of the action output that sets the job up. To view the badge URL
+you will need to issue a:
+
+    juju show-action-output <action-id>
+
+with the action id of a `build-on-commit`, `build-on-release` or `build-bundle` actions.
+
+The badge URL is of the following form:
+
+    http://<Jenkins_machine>:5000/ci/v1.0/build-output/<job>/build-badge.svg
+
+You will need to make sure the CI is reachable from the location where the badge is shown
+so make sure you have exposed the cwr service.
+
+Given your README is using a markup language using the badge should be as easy as:
+
+    [![Build Status](http://<Jenkins_machine>:5000/ci/v1.0/build-output/<job>/build-badge.svg)](http://<Jenkins_machine>:5000/)
+
+
 # Resources
 
 - [Juju mailing list](https://lists.ubuntu.com/mailman/listinfo/juju)

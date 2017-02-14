@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 
+from os import getcwd
 import sys
 sys.path.append('lib')
 
@@ -8,13 +9,14 @@ activate_venv()
 
 from charmhelpers.core import hookenv  # noqa: E402
 from charms.reactive import RelationBase  # noqa: E402
+from charmhelpers.core import templating  # noqa: E402
 import cwrhelpers  # noqa: E402
 from jenkins import Jenkins, JenkinsException  # noqa: E402
-from os import getcwd
 from utils import (
     trigger_jenkins_job,
     get_hook_token,
     get_rest_path,
+    get_badge_path,
     REST_PORT,
     TRIGGER_PERIODICALLY,
     SKIP_BUILDS,
@@ -55,42 +57,43 @@ def add_job():
         refspec = REFSPEC
         branch = "*/tags/*"
     else:
-        cwrhelpers.fail_action('The repo-access can only be \'webhooks\' or \'poll\'')
+        cwrhelpers.fail_action('The repo-access can only be '
+                               '"webhooks" or "poll"')
 
-    rep = {"{{gitrepo}}": hookenv.action_get("repo"),
-           "{{charm_subdir}}": hookenv.action_get("charm-subdir"),
-           "{{pushtochannel}}": hookenv.action_get("push-to-channel") or "",
-           "{{lpid}}": hookenv.action_get("lp-id") or "",
-           "{{branch}}": branch,
-           "{{charmname}}": charm_name,
-           "{{charm_fname}}": charm_fname,
-           "{{bundle_name}}": bundle_name,
-           "{{bundle_fname}}": bundle_fname,
-           "{{bundle_app_name}}": bundle_app_name,
-           "{{refspec}}": refspec,
-           "{{series}}": hookenv.action_get("series") or "",
-           "{{controller}}": hookenv.action_get("controller") or "",
-           "{{charm_home}}": getcwd(),
-           "{{trigger}}": trigger,
-           "{{skip_builds}}": skip_builds,
-           }
-
-    template_path_source = "templates/BuildMyCharm/config.xml"
-    job_name = "release-charm-{}".format(charm_fname)
-    with open(template_path_source) as infile:
-        data = infile.read()
-        for src, target in rep.items():
-            data = data.replace(src, target)
-        try:
-            jclient.create_job(job_name, data)
-        except JenkinsException as e:
-            cwrhelpers.fail_action(str(e))
+    job_name = "release_charm_{}".format(charm_fname)
+    job_contents = templating.render(
+        source="BuildMyCharm/config.xml",
+        target=None,
+        context={
+            "gitrepo": hookenv.action_get("repo"),
+            "charm_subdir": hookenv.action_get("charm-subdir"),
+            "pushtochannel": hookenv.action_get("push-to-channel") or "",
+            "lpid": hookenv.action_get("lp-id") or "",
+            "branch": branch,
+            "charmname": charm_name,
+            "charm_fname": charm_fname,
+            "bundle_name": bundle_name,
+            "bundle_fname": bundle_fname,
+            "bundle_app_name": bundle_app_name,
+            "refspec": refspec,
+            "series": hookenv.action_get("series") or "",
+            "controller": hookenv.action_get("controller") or "",
+            "charm_home": getcwd(),
+            "trigger": trigger,
+            "skip_builds": skip_builds,
+            "job_name": job_name,
+        })
+    try:
+        jclient.create_job(job_name, job_contents)
+    except JenkinsException as e:
+        cwrhelpers.fail_action(str(e))
 
     token = get_hook_token(job_name)
-    url = "http://<Jenkins_machine>:{}{}/trigger/{}/{}".format(REST_PORT,
-                                                               get_rest_path(),
-                                                               job_name,
-                                                               token)
+    url = "http://<Jenkins_machine>:{}{}/trigger/{}/{}".format(
+        REST_PORT, get_rest_path(), job_name, token)
+
+    badge_url = "http://<Jenkins_machine>:{}{}".format(
+        REST_PORT, get_badge_path(job_name))
 
     # Need to trigger the job fir the first time in case of poll
     # or return the webhook
@@ -98,6 +101,8 @@ def add_job():
         trigger_jenkins_job(jclient, job_name)
     else:
         hookenv.action_set({'hook.url': url})
+
+    hookenv.action_set({'build.badge': badge_url})
 
 
 if __name__ == "__main__":

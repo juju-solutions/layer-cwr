@@ -1,0 +1,7 @@
+*.pyc
+.idea
+*.swp
+.coverage
+.tox
+__pycache__
+cover/

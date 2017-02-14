@@ -1,3 +1,4 @@
+import re
 import time
 import base64
 import os
@@ -36,6 +37,10 @@ CONTROLLERS_LIST_FILE = "/var/lib/jenkins/controller.names"
 REST_PORT = 5000
 REST_PREFIX = "ci"
 REST_VER = "v1.0"
+
+
+def get_fname(name):
+    return re.sub(r'[^a-zA-Z0-9]', '_', name)
 
 
 def trigger_jenkins_job(jclient, job, attempts=5):
@@ -107,6 +112,11 @@ def get_controllers():
 def get_rest_path():
     """Return the 'path' portion of the REST URL."""
     return "/" + REST_PREFIX + "/" + REST_VER
+
+
+def get_badge_path(job):
+    """The path to a jobs build badge."""
+    return "/{}/build-badge.svg".format(job)
 
 
 def report_status():

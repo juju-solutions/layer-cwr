@@ -1,5 +1,5 @@
 from json import dumps, loads
-from flask import Flask, request, abort
+from flask import Flask, request, abort, make_response
 from jenkins import Jenkins
 from pathlib import Path
 import mimetypes
@@ -8,10 +8,12 @@ import logging
 import sys
 sys.path.append('../lib')
 
+from charmhelpers.core import templating  # noqa: E402
 from utils import (
     REST_PORT,
     get_controllers,
     get_rest_path,
+    get_badge_path,
     validate_hook_token
 )  # noqa: E402
 
@@ -83,8 +85,43 @@ def get_build_output(job_name, build_id):
     return dumps(build_info, sort_keys=True, separators=(',', ': '))
 
 
-@app.route("/ci/v1.0/build-artifacts/<string:job_name>/<int:build_id>/")
-@app.route("/ci/v1.0/build-artifacts/<string:job_name>/<int:build_id>/"
+@app.route(get_badge_path("<string:job_name>"))
+def get_build_svg_output(job_name):
+    job_path = Path('/srv/artifacts') / job_name
+    report_file = None
+    if job_path.exists():
+        last_build = sorted(d for d in job_path.iterdir() if d.is_dir())[-1]
+        report_file = last_build / 'report.json'
+    templates_dir = str(Path(__file__).parent.parent / 'templates')
+
+    # We might not have a first build yet
+    if not report_file or not report_file.exists():
+        context = {'results': []}
+    else:
+        context = loads(report_file.read_text())
+
+    results_args = request.args.get("results")
+    if results_args:
+        # allow overriding results for testing
+        context['results'] = []
+        for arg in results_args.split('_'):
+            provider, test_outcome = arg.split('-')
+            context['results'].append({
+                'provider': provider,
+                'test_outcome': test_outcome})
+
+    svg = templating.render(source='badge.svg',
+                            target=None,
+                            templates_dir=templates_dir,
+                            context=context)
+
+    response = make_response(svg)
+    response.content_type = 'image/svg+xml'
+    return response
+
+
+@app.route(rest_path + "/build-artifacts/<string:job_name>/<int:build_id>/")
+@app.route(rest_path + "/build-artifacts/<string:job_name>/<int:build_id>/"
            "<string:filename>")
 def get_build_artifact(job_name, build_id, filename=None):
     charm_name = build_id[len('charm-'):]

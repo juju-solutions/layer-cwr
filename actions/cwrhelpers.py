@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
 
-import re
 import sys
 import time
 import yaml
@@ -13,6 +12,7 @@ from charmhelpers.core import hookenv  # noqa: E402
 from jenkins import NotFoundException  # noqa: E402
 from theblues.charmstore import CharmStore  # noqa: E402
 from theblues.errors import EntityNotFound, ServerError  # noqa: E402
+from utils import get_fname  # noqa: E402
 
 
 class InvalidBundle(Exception):
@@ -89,10 +89,6 @@ def get_reference_bundle():
         return bundle_name, bundle_fname, bundle_app_name
     else:
         return "", "", ""
-
-
-def get_fname(name):
-    return re.sub(r'[^a-zA-Z0-9]', '_', name)
 
 
 def fail_action(msg, output=None):

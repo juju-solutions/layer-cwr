@@ -143,17 +143,17 @@ python3 -c "$(update_bundle)"
 # Generate the test plan yaml
 rm -f totest.yaml
 echo "bundle: /tmp/bundles/{{bundle_fname}}" &gt;&gt; totest.yaml
-echo "bundle_name: {{charmname}}_in_{{bundle_fname}}" &gt;&gt; totest.yaml
+echo "bundle_name: {{job_name}}" &gt;&gt; totest.yaml
 echo "bundle_file: bundle-cwr.yaml" >> totest.yaml
 
 # We want cwr json results to be transformed to xml even if cwr fails
-eval "function transform_results() { python3 {{charm_home}}/scripts/json2junit.py /srv/artifacts/ {{charm_fname}}_in_{{bundle_fname}} $BUILD_NUMBER  > $WORKSPACE/report.xml; }"
+eval "function transform_results() { python3 {{charm_home}}/scripts/json2junit.py /srv/artifacts/ {{job_name}} $BUILD_NUMBER  > $WORKSPACE/report.xml; }"
 old_trap=`trap -p EXIT | awk -F"'" '{print $2}'`
 new_trap="transform_results; ${old_trap}"
 trap "${new_trap}" EXIT
 
 # Link cwr artifacts for visibility in the jenkins job
-ARTIFACTS_DIR=/srv/artifacts/{{charm_fname}}_in_{{bundle_fname}}/$BUILD_NUMBER
+ARTIFACTS_DIR=/srv/artifacts/{{job_name}}/$BUILD_NUMBER
 mkdir -p $ARTIFACTS_DIR
 ln -s $ARTIFACTS_DIR /var/lib/jenkins/jobs/$JOB_NAME/builds/$BUILD_NUMBER/archive
 env MATRIX_OUTPUT_DIR=$ARTIFACTS_DIR cwr -F ${MODELS_TO_TEST} totest.yaml --results-dir /srv/artifacts --test-id $BUILD_NUMBER

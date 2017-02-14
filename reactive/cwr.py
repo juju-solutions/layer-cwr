@@ -13,6 +13,7 @@ from utils import (
 from charmhelpers import fetch
 from charmhelpers.core import host, hookenv
 from charms.reactive import (
+    hook,
     when,
     when_not,
     set_state,
@@ -188,6 +189,12 @@ def controllers_updated():
 @when('jenkins.available')
 def jenkins_available(jenkins):
     report_status()
+
+
+@hook('upgrade-charm')
+def restart_ciserver():
+    if is_state("jenkins.jobs.ready"):
+        CIGateway.restart()
 
 
 def inform_client(client):

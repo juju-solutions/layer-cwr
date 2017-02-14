@@ -3,7 +3,7 @@ import subprocess
 
 from jenkins import Jenkins
 from charmhelpers.core import hookenv, host
-from charms.templating.jinja2 import render
+from charmhelpers.core import templating
 
 
 class CIGateway:
@@ -21,11 +21,12 @@ class CIGateway:
                    group='ubuntu',
                    perms=0o755)
 
-        render(source="cwr-server.service",
-               target="/etc/systemd/system/cwr-server.service",
-               context={
-                   'charm_dir': hookenv.charm_dir()
-               })
+        templating.render(
+            source="cwr-server.service",
+            target="/etc/systemd/system/cwr-server.service",
+            context={
+                'charm_dir': hookenv.charm_dir()
+            })
 
         host.service_resume('cwr-server')
         if host.init_is_systemd():
@@ -38,6 +39,10 @@ class CIGateway:
         if host.init_is_systemd():
             subprocess.check_call(['systemctl', 'daemon-reload'])
         host.service_stop('cwr-server')
+
+    @classmethod
+    def restart(cls):
+        host.service_restart('cwr-server')
 
     @classmethod
     def get_current_jenkins(cls):
