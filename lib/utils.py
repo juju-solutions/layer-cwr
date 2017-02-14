@@ -1,3 +1,4 @@
+import re
 import time
 import base64
 import os
@@ -36,6 +37,10 @@ CONTROLLERS_LIST_FILE = "/var/lib/jenkins/controller.names"
 REST_PORT = 5000
 REST_PREFIX = "ci"
 REST_VER = "v1.0"
+
+
+def get_fname(name):
+    return re.sub(r'[^a-zA-Z0-9]', '_', name)
 
 
 def trigger_jenkins_job(jclient, job, attempts=5):

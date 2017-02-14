@@ -8,7 +8,7 @@ import logging
 import sys
 sys.path.append('../lib')
 
-from charmhelpers.core import templating
+from charmhelpers.core import templating  # noqa: E402
 from utils import (
     REST_PORT,
     get_controllers,

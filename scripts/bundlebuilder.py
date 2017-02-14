@@ -10,7 +10,8 @@ from shutil import rmtree
 from yaml import safe_load, dump
 from re import search
 
-from actions.cwrhelpers import get_fname
+sys.path.append(os.path.join(os.path.dirname(__file__), '..', 'lib'))
+from utils import get_fname  # noqa: E402
 
 
 def execute(cmd, raise_exception=True):

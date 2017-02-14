@@ -14,6 +14,7 @@ from jenkins import Jenkins, JenkinsException  # noqa: E402
 from utils import (
     REST_PORT,
     get_badge_path,
+    get_fname,
 )  # noqa: E402
 
 
@@ -30,7 +31,7 @@ def add_job():
 
     repo = hookenv.action_get("repo")
     bundle_name = hookenv.action_get("bundle-name")
-    bundle_fname = cwrhelpers.get_fname(bundle_name)
+    bundle_fname = get_fname(bundle_name)
     branch = hookenv.action_get("branch")
     controller = hookenv.action_get("controller")
     charm_home = getcwd()
