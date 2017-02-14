@@ -120,6 +120,12 @@ def get_badge_path(job):
 
 
 def report_status():
+    if is_state('jenkins.jobs.failed'):
+        hookenv.status_set('blocked',
+                           'Failed to install Jenkins plugins. '
+                           'Retry by removing/adding cwr relation.')
+        return
+
     if not is_state('jenkins.available'):
         hookenv.status_set('waiting',
                            'Waiting for jenkins to become available.')
