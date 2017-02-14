@@ -10,6 +10,8 @@ from shutil import rmtree
 from yaml import safe_load, dump
 from re import search
 
+from actions.cwrhelpers import get_fname
+
 
 def execute(cmd, raise_exception=True):
     """
@@ -220,7 +222,7 @@ class Bundle(object):
         """
         with open('totest.yaml', 'w') as f:
             f.write("bundle: {}\n".format(self.tempdir))
-            f.write("bundle_name: {}\n".format(self.ci_info['bundle']['name']))
+            f.write("bundle_name: build-bundle-{}\n".format(get_fname(self.ci_info['bundle']['name'])))
             f.write("bundle_file: bundle.yaml\n")
 
         cmd = list(self.CWR_command)
