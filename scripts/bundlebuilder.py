@@ -44,7 +44,13 @@ def execute(cmd, raise_exception=True):
 
 class Bundle(object):
 
-    def __init__(self, repo, branch, ci_info_file=None, CWR_dry_run=False, store_push_dry_run=False):
+    def __init__(self,
+                 repo,
+                 branch,
+                 ci_info_file=None,
+                 CWR_dry_run=False,
+                 store_push_dry_run=False,
+                 fake_output=""):
         """
         Grab the bundle source and initialise the object.
 
@@ -54,6 +60,7 @@ class Bundle(object):
             ci_info_file: override the bundle's ci-info.yaml file
             CWR_dry_run: perform a dry run on running the tests
             store_push_dry_run: perform a dry run on pushing to the store
+            fake_output: path to a tarball with fake output
         """
         self.tempdir = mkdtemp()
         execute(["git", "clone", repo, "--branch", branch, "{}/".format(self.tempdir)])
@@ -72,6 +79,7 @@ class Bundle(object):
 
         self.location = "cs:~{}/{}".format(self.ci_info['bundle']['namespace'], self.ci_info['bundle']['name'])
         self.upgraded = False
+        self.fake_output = fake_output
 
         # We keep the sha1 digest/signature of the last bundle for
         # which we triggered a build in the follwing file
@@ -226,13 +234,21 @@ class Bundle(object):
             f.write("bundle_name: build-bundle-{}\n".format(get_fname(self.ci_info['bundle']['name'])))
             f.write("bundle_file: bundle.yaml\n")
 
-        cmd = list(self.CWR_command)
-        cmd += ["-F"]
-        cmd += ["--results-dir", "/srv/artifacts"]
-        cmd += ["--test-id", build_num]
-        cmd += models
-        cmd += ["totest.yaml"]
-        execute(cmd)
+        if self.fake_output == "":
+            cmd = list(self.CWR_command)
+            cmd += ["-F"]
+            cmd += ["--results-dir", "/srv/artifacts"]
+            cmd += ["--test-id", build_num]
+            cmd += models
+            cmd += ["totest.yaml"]
+            execute(cmd)
+        else:
+            output_dir = "/srv/artifacts/{}/{}/".format(os.environ['JOB_NAME'], build_num)
+            cmd_str = "tar -zxvf {} -C {}".format(self.fake_output, output_dir)
+            cmd = cmd_str.split()
+            execute(cmd)
+            if "output-results/pass" not in self.fake_output:
+                raise Exception("Faking a failing CWR")
 
     def release(self):
         """
@@ -366,7 +382,8 @@ class Coordinator(object):
         """
         with Bundle(repo, branch,
                     CWR_dry_run=self.CWR_dry_run,
-                    store_push_dry_run=self.store_push_dry_run) as bundle:
+                    store_push_dry_run=self.store_push_dry_run,
+                    fake_output=os.environ['OUTPUT_SCENARIO']) as bundle:
             print("Checking {}".format(repo))
             charms = bundle.get_charms()
             print("Charms in bunlde {}".format(charms))

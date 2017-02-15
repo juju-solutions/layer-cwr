@@ -11,6 +11,16 @@
           <description>Tag to be build (optional)</description>
           <defaultValue></defaultValue>
         </hudson.model.StringParameterDefinition>
+        <hudson.model.ChoiceParameterDefinition>
+          <name>OUTPUT_SCENARIO</name>
+          <description></description>
+          <choices class="java.util.Arrays$ArrayList">
+            <a class="string-array">
+              <string></string>
+              <string>fail-hadoop_client</string>
+            </a>
+          </choices>
+        </hudson.model.ChoiceParameterDefinition>
       </parameterDefinitions>
     </hudson.model.ParametersDefinitionProperty>
     <com.coravy.hudson.plugins.github.GithubProjectProperty plugin="github@1.24.0">
@@ -156,7 +166,20 @@ trap "${new_trap}" EXIT
 ARTIFACTS_DIR=/srv/artifacts/{{job_name}}/$BUILD_NUMBER
 mkdir -p $ARTIFACTS_DIR
 ln -s $ARTIFACTS_DIR /var/lib/jenkins/jobs/$JOB_NAME/builds/$BUILD_NUMBER/archive
-env MATRIX_OUTPUT_DIR=$ARTIFACTS_DIR cwr -F ${MODELS_TO_TEST} totest.yaml --results-dir /srv/artifacts --test-id $BUILD_NUMBER
+if [ ! -z $OUTPUT_SCENARIO ]
+then
+     FAKE_FILES_TAR=&quot;{{charm_home}}/templates/output-results/&quot;$OUTPUT_SCENARIO&quot;.tar.gz&quot;
+     tar -zxvf $FAKE_FILES_TAR -C $ARTIFACTS_DIR
+
+     if [[ $OUTPUT_SCENARIO == pass* ]]
+     then
+         exit 0
+     else
+         exit 1
+     fi
+else
+     env MATRIX_OUTPUT_DIR=$ARTIFACTS_DIR cwr -F ${MODELS_TO_TEST} totest.yaml --results-dir /srv/artifacts --test-id $BUILD_NUMBER
+fi
 
 if [ ! -z "{{pushtochannel}}" ]
 then
