@@ -6,6 +6,8 @@ import yaml
 import uuid
 from charmhelpers.core import hookenv
 from charms.reactive import is_state
+from os import listdir
+
 
 TRIGGER_PERIODICALLY = '''
     <hudson.triggers.SCMTrigger>
@@ -37,6 +39,13 @@ CONTROLLERS_LIST_FILE = "/var/lib/jenkins/controller.names"
 REST_PORT = 5000
 REST_PREFIX = "ci"
 REST_VER = "v1.0"
+
+
+def get_output_scenarios():
+    tarballs = [f[:-7] for f in listdir('templates/output-results')
+                if f.endswith("tar.gz")]
+    xml = ["<string>{}</string>\n".format(f) for f in tarballs]
+    return xml
 
 
 def get_fname(name):

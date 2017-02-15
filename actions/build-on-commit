@@ -17,6 +17,7 @@ from utils import (
     get_hook_token,
     get_rest_path,
     get_badge_path,
+    get_output_scenarios,
     REST_PORT,
     TRIGGER_PERIODICALLY,
     SKIP_BUILDS
@@ -77,6 +78,7 @@ def add_job():
             "trigger": trigger,
             "skip_builds": skip_builds,
             "job_name": job_name,
+            "output_scenarios": get_output_scenarios(),
         })
     try:
         jclient.create_job(job_name, job_contents)

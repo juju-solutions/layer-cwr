@@ -382,8 +382,7 @@ class Coordinator(object):
         """
         with Bundle(repo, branch,
                     CWR_dry_run=self.CWR_dry_run,
-                    store_push_dry_run=self.store_push_dry_run,
-                    fake_output=os.environ['OUTPUT_SCENARIO']) as bundle:
+                    store_push_dry_run=self.store_push_dry_run) as bundle:
             print("Checking {}".format(repo))
             charms = bundle.get_charms()
             print("Charms in bunlde {}".format(charms))
@@ -423,7 +422,8 @@ class Coordinator(object):
         """
         with Bundle(repo, branch,
                     CWR_dry_run=self.CWR_dry_run,
-                    store_push_dry_run=self.store_push_dry_run) as bundle:
+                    store_push_dry_run=self.store_push_dry_run,
+                    fake_output=os.environ['OUTPUT_SCENARIO']) as bundle:
             print("Checking {}".format(repo))
             charms = bundle.get_charms()
             print("Charms in bundle {}".format(charms))

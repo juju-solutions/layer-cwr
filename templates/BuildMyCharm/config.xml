@@ -17,7 +17,7 @@
           <choices class="java.util.Arrays$ArrayList">
             <a class="string-array">
               <string></string>
-              <string>fail-hadoop_client</string>
+                {{output_scenarios}}
             </a>
           </choices>
         </hudson.model.ChoiceParameterDefinition>

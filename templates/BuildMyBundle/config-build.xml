@@ -12,7 +12,7 @@
           <choices class="java.util.Arrays$ArrayList">
             <a class="string-array">
               <string></string>
-              <string>pass-bundle-java_devenv</string>
+                {{output_scenarios}}
             </a>
           </choices>
         </hudson.model.ChoiceParameterDefinition>
