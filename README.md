@@ -197,15 +197,22 @@ with the action id of a `build-on-commit`, `build-on-release` or `build-bundle` 
 
 The badge URL is of the following form:
 
-    http://<Jenkins_machine>:5000/ci/v1.0/build-output/<job>/build-badge.svg
+    http://<Jenkins_machine>:5000/<jenkins_job_name>/build-badge.svg
 
 You will need to make sure the CI is reachable from the location where the badge is shown
 so make sure you have exposed the cwr service.
 
 Given your README is using a markup language using the badge should be as easy as:
 
-    [![Build Status](http://<Jenkins_machine>:5000/ci/v1.0/build-output/<job>/build-badge.svg)](http://<Jenkins_machine>:5000/)
+    [![Build Status](http://<Jenkins_machine>:5000/<jenkins_job_name>/build-badge.svg)](http://<Jenkins_machine>:5000/)
 
+A build badge will report the test result of cloud weather report for all the clouds
+used to run the job at hand and it may look like this:
+
+![alt text](https://camo.githubusercontent.com/ebf2531c70134716f3778449305fdf3b3a4be015/68747470733a2f2f63646e2e7261776769742e636f6d2f6a6f686e7363612f62366639623364313230313937363132656135313639666664343531663635352f7261772f353966613633656132386336636664656361313366326161383734303666653930363730653163392f6275696c642d62616467652e737667)
+
+Green marks the clouds where tests are passing, red the clouds where tests are failing
+and orange indicates an infrastructure error (eg, deployment failing).
 
 # Resources
 
