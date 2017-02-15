@@ -37,7 +37,7 @@ else
 fi
 
 # Create an empty unit tests results file in case the bundle does not produce any
-touch results.xml
+touch report.xml
 
 for controller in $CONTROLLERS
 do
@@ -68,8 +68,14 @@ do
     trap "${new_trap}" EXIT
 done
 
+# We want cwr results to be moved to the workpspace even if cwr fails
+eval "function unit_results() { cp /srv/artifacts/$JOB_NAME/$BUILD_NUMBER/report.xml $WORKSPACE/report.xml; }"
+old_trap=`trap -p EXIT | awk -F"'" '{print $2}'`
+new_trap="unit_results; ${old_trap}"
+trap "${new_trap}" EXIT
+
 # Link cwr artifacts for visibility in the jenkins job
-ARTIFACTS_DIR=/srv/artifacts/{{bundle_fname}}/$BUILD_NUMBER
+ARTIFACTS_DIR=/srv/artifacts/$JOB_NAME/$BUILD_NUMBER
 mkdir -p $ARTIFACTS_DIR
 ln -s $ARTIFACTS_DIR /var/lib/jenkins/jobs/$JOB_NAME/builds/$BUILD_NUMBER/archive
 export MATRIX_OUTPUT_DIR=$ARTIFACTS_DIR

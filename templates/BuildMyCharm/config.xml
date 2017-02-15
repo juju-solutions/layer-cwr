@@ -146,10 +146,10 @@ echo "bundle: /tmp/bundles/{{bundle_fname}}" &gt;&gt; totest.yaml
 echo "bundle_name: {{job_name}}" &gt;&gt; totest.yaml
 echo "bundle_file: bundle-cwr.yaml" >> totest.yaml
 
-# We want cwr json results to be transformed to xml even if cwr fails
-eval "function transform_results() { python3 {{charm_home}}/scripts/json2junit.py /srv/artifacts/ {{job_name}} $BUILD_NUMBER  > $WORKSPACE/report.xml; }"
+# We want cwr results to be moved to the workpspace even if cwr fails
+eval "function move_results() { cp /srv/artifacts/{{job_name}}/$BUILD_NUMBER/report.xml $WORKSPACE/report.xml; }"
 old_trap=`trap -p EXIT | awk -F"'" '{print $2}'`
-new_trap="transform_results; ${old_trap}"
+new_trap="move_results; ${old_trap}"
 trap "${new_trap}" EXIT
 
 # Link cwr artifacts for visibility in the jenkins job
