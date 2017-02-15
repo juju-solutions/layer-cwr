@@ -37,7 +37,7 @@ else
 fi
 
 # Create an empty unit tests results file in case the bundle does not produce any
-touch results.xml
+touch report.xml
 
 for controller in $CONTROLLERS
 do
