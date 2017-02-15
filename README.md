@@ -186,33 +186,33 @@ An example run of this action might look like this:
 
 # Build Badge
 
-The CI offers an SVG badge showing the current build status. The badge is intended for
-reporting eg in README files. Each jenkins job is has its own build badge URL
-printed as part of the action output that sets the job up. To view the badge URL
-you will need to issue a:
+The CI offers an SVG badge showing the current build status. An example use of
+this badge would be for reporting CI status in README files. Each jenkins job
+has its own build badge URL shown as part of the action output used to set up
+the job. To view the badge URL, run:
 
     juju show-action-output <action-id>
 
-with the action id of a `build-on-commit`, `build-on-release` or `build-bundle` actions.
+with the action id of a `build-on-commit`, `build-on-release` or `build-bundle` action.
 
 The badge URL is of the following form:
 
     http://<Jenkins_machine>:5000/<jenkins_job_name>/build-badge.svg
 
-You will need to make sure the CI is reachable from the location where the badge is shown
-so make sure you have exposed the cwr service.
+You will need to make sure the CI is reachable from the location where the badge is
+shown, so make sure you have exposed the cwr service.
 
-Given your README is using a markup language using the badge should be as easy as:
+Given your README is using a markup language, using the badge should be as easy as:
 
     [![Build Status](http://<Jenkins_machine>:5000/<jenkins_job_name>/build-badge.svg)](http://<Jenkins_machine>:5000/)
 
-A build badge will report the test result of cloud weather report for all the clouds
-used to run the job at hand and it may look like this:
+A build badge will report the test result of Cloud Weather Report for all clouds
+on which the job was run. An example looks like this:
 
 ![alt text](https://camo.githubusercontent.com/ebf2531c70134716f3778449305fdf3b3a4be015/68747470733a2f2f63646e2e7261776769742e636f6d2f6a6f686e7363612f62366639623364313230313937363132656135313639666664343531663635352f7261772f353966613633656132386336636664656361313366326161383734303666653930363730653163392f6275696c642d62616467652e737667)
 
-Green marks the clouds where tests are passing, red the clouds where tests are failing
-and orange indicates an infrastructure error (eg, deployment failing).
+Green indicates tests passed on a particular cloud; red indicates failing tests;
+yellow/orange indicates an infrastructure error (e.g., deployment failure).
 
 # Resources
 
