@@ -95,6 +95,10 @@ mkdir -p $ARTIFACTS_DIR
 ln -s $ARTIFACTS_DIR /var/lib/jenkins/jobs/$JOB_NAME/builds/$BUILD_NUMBER/archive
 export MATRIX_OUTPUT_DIR=$ARTIFACTS_DIR
 
+# In case output scenario is not set
+if [ -z ${OUTPUT_SCENARIO+x} ]; then
+    export OUTPUT_SCENARIO=""
+fi
 if [ ! -z $OUTPUT_SCENARIO ]
 then
     OUTPUT_SCENARIO=&quot;{{cwr_charm_home}}/templates/output-results/&quot;$OUTPUT_SCENARIO&quot;.tar.gz&quot;
