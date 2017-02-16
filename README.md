@@ -145,7 +145,10 @@ any charms that can be updated. If an update is possible
 the bundle.yaml will be updated and all tests of the bundle will run.
 If the tests are successful this job could also release the bundle
 and the charms to the store.
-The job will run periodically (every 10 minutes).
+The job will run periodically (every 10 minutes), but you can also trigger the job
+via a webhook. The webhoock URL is shown in the `build-bundle` action's output
+and would require you to perform a POST request with at least an empty payload
+(compatible to the [GitHub Push Event Webhook](https://developer.github.com/v3/activity/events/types/#pushevent)).
 
 The `build-bundle` action requires you to have a `ci-info.yaml` file in your bundle repository.
 Here is an example of how that yaml should look like:
