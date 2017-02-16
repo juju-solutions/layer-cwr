@@ -14,6 +14,8 @@ from jenkins import Jenkins, JenkinsException  # noqa: E402
 from utils import (
     REST_PORT,
     get_badge_path,
+    get_rest_path,
+    get_hook_token,
     get_fname,
 )  # noqa: E402
 
@@ -54,9 +56,14 @@ def add_job():
     except JenkinsException as e:
         cwrhelpers.fail_action(str(e))
 
+    token = get_hook_token(job_name)
+    url = "http://<Jenkins_machine>:{}{}/trigger/{}/{}".format(
+        REST_PORT, get_rest_path(), job_name, token)
+
     badge_url = "http://<Jenkins_machine>:{}{}".format(
         REST_PORT, get_badge_path(job_name))
 
+    hookenv.action_set({'hook.url': url})
     hookenv.action_set({'build.badge': badge_url})
 
 if __name__ == "__main__":
