@@ -420,10 +420,13 @@ class Coordinator(object):
             models: Juju models to use for testing the bundle
 
         """
+        output_scenario = ""
+        if 'OUTPUT_SCENARIO' in os.environ:
+            output_scenario = os.environ['OUTPUT_SCENARIO']
         with Bundle(repo, branch,
                     CWR_dry_run=self.CWR_dry_run,
                     store_push_dry_run=self.store_push_dry_run,
-                    fake_output=os.environ['OUTPUT_SCENARIO']) as bundle:
+                    fake_output=output_scenario) as bundle:
             print("Checking {}".format(repo))
             charms = bundle.get_charms()
             print("Charms in bundle {}".format(charms))
