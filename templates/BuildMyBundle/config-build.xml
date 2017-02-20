@@ -3,7 +3,22 @@
   <actions/>
   <description></description>
   <keepDependencies>false</keepDependencies>
-  <properties/>
+  <properties>
+    <hudson.model.ParametersDefinitionProperty>
+      <parameterDefinitions>
+        <hudson.model.ChoiceParameterDefinition>
+          <name>OUTPUT_SCENARIO</name>
+          <description></description>
+          <choices class="java.util.Arrays$ArrayList">
+            <a class="string-array">
+              <string></string>
+                {{output_scenarios}}
+            </a>
+          </choices>
+        </hudson.model.ChoiceParameterDefinition>
+      </parameterDefinitions>
+    </hudson.model.ParametersDefinitionProperty>
+  </properties>
   <scm class="hudson.scm.NullSCM"/>
   <canRoam>true</canRoam>
   <disabled>false</disabled>
@@ -79,6 +94,11 @@ ARTIFACTS_DIR=/srv/artifacts/$JOB_NAME/$BUILD_NUMBER
 mkdir -p $ARTIFACTS_DIR
 ln -s $ARTIFACTS_DIR /var/lib/jenkins/jobs/$JOB_NAME/builds/$BUILD_NUMBER/archive
 export MATRIX_OUTPUT_DIR=$ARTIFACTS_DIR
+
+if [ ! -z $OUTPUT_SCENARIO ]
+then
+    OUTPUT_SCENARIO=&quot;{{cwr_charm_home}}/templates/output-results/&quot;$OUTPUT_SCENARIO&quot;.tar.gz&quot;
+fi
 python3 -u {{cwr_charm_home}}/scripts/bundlebuilder.py build {{repo}} {{branch}} $BUILD_NUMBER $MODELS_TO_TEST
 </command>
     </hudson.tasks.Shell>
