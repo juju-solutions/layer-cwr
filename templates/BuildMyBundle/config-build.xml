@@ -30,8 +30,8 @@
       <labelRestriction>false</labelRestriction>
       <enableConcurrentBuild>false</enableConcurrentBuild>
       <script>#!/bin/bash
-python3 -u ~/scripts/bundlebuilder.py check {{repo}} {{branch}}
-</script>
+python3 -u ~/scripts/bundlebuilder.py check {{repo}} {{branch}} {{bundle_subdir}}
+      </script>
       <exitCode>0</exitCode>
     </org.jenkinsci.plugins.scripttrigger.ScriptTrigger>
   </triggers>
@@ -39,7 +39,7 @@ python3 -u ~/scripts/bundlebuilder.py check {{repo}} {{branch}}
   <builders>
     <hudson.tasks.Shell>
       <command>#!/bin/bash
-python3 -u ~/scripts/bundlebuilder.py build {{repo}} {{branch}} $BUILD_NUMBER "{{controller}}"
+python3 -u ~/scripts/bundlebuilder.py build {{repo}} {{branch}} {{bundle_subdir}} $BUILD_NUMBER "{{controller}}"
 </command>
     </hudson.tasks.Shell>
   </builders>

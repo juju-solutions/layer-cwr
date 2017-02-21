@@ -136,6 +136,9 @@ charms already released on the channels of the Juju store.
 `build-bundle` action takes the following parameters:
   - repo: The github repo of the bundle
   - branch (optional): The branch of the github repo where the bundle is.
+  - branch (optional): The branch of the github repo where the bundle is.
+  - bundle-subdir (optional): The subdirectory in the repo where the
+                              bundle is located.
   - bundle-name: The name of the bundle
   - controller: Name of the controller to use for running the tests
 
