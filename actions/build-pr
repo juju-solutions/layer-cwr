@@ -1,0 +1,81 @@
+#!/usr/bin/env python3
+
+from os import getcwd
+import sys
+sys.path.append('lib')
+
+from charms.layer.basic import activate_venv  # noqa: E402
+activate_venv()
+
+from charmhelpers.core import hookenv  # noqa: E402
+from charms.reactive import RelationBase  # noqa: E402
+from charmhelpers.core import templating  # noqa: E402
+import cwrhelpers  # noqa: E402
+from jenkins import Jenkins, JenkinsException  # noqa: E402
+from utils import (
+    trigger_jenkins_job,
+    get_hook_token,
+    get_rest_path,
+    get_badge_path,
+    get_output_scenarios,
+    REST_PORT,
+    TRIGGER_PERIODICALLY,
+    SKIP_BUILDS,
+    REFSPEC
+)  # noqa: E402
+
+
+def add_job():
+    '''
+    Adds a job to be triggered when a PR is submitted
+
+    '''
+    jenkins_relation = (RelationBase.from_state('jenkins.available'))
+    jenkins_connection_info = jenkins_relation.get_connection_info()
+    jclient = Jenkins(jenkins_connection_info["jenkins_url"],
+                      jenkins_connection_info["admin_username"],
+                      jenkins_connection_info["admin_password"])
+
+    charm_name, charm_fname = cwrhelpers.get_charm_names()
+    try:
+        bundle_name, bundle_fname, bundle_app_name = cwrhelpers\
+                .get_reference_bundle()
+    except cwrhelpers.InvalidBundle as e:
+        cwrhelpers.fail_action(str(e), e.reason)
+    if not bundle_name:
+        cwrhelpers.fail_action('Charm does not provide reference bundle '
+                               'and none was provided to action')
+
+    job_name = "pr_charm_{}".format(charm_fname)
+    job_contents = templating.render(
+        source="BuildMyPR/config.xml",
+        target=None,
+        context={
+            "gitrepo": hookenv.action_get("repo"),
+            "charm_subdir": hookenv.action_get("charm-subdir"),
+            "pushtochannel": hookenv.action_get("push-to-channel") or "",
+            "lpid": hookenv.action_get("lp-id") or "",
+            "charmname": charm_name,
+            "charm_fname": charm_fname,
+            "bundle_name": bundle_name,
+            "bundle_fname": bundle_fname,
+            "bundle_app_name": bundle_app_name,
+            "series": hookenv.action_get("series") or "",
+            "controller": hookenv.action_get("controller") or "",
+            "charm_home": getcwd(),
+            "job_name": job_name,
+        })
+    try:
+        jclient.create_job(job_name, job_contents)
+    except JenkinsException as e:
+        cwrhelpers.fail_action(str(e))
+
+    token = get_hook_token(job_name)
+    url = "http://<Jenkins_machine>:{}{}/pr-trigger/{}/{}".format(
+        REST_PORT, get_rest_path(), job_name, token)
+
+    hookenv.action_set({'hook.url': url})
+
+
+if __name__ == "__main__":
+    add_job()

@@ -1,3 +1,32 @@
+build-pr:
+    description: Add a job that would build a charm upon a PR request.
+    params:
+        charm-name:
+            description: Name of the charm.
+            type: string
+        reference-bundle:
+            description: |
+                Charm store URL for a bundle to use to test the given
+                charm. For example, "~charmers/mediawiki-single".
+                If this is not provided, the charm must set it in its tests.yaml.
+            type: string
+            default: ""
+        repo:
+            description: Git repository for the charm to watch.
+            type: string
+        charm-subdir:
+            description: |
+                Subdirectory in the repo where the charm lives,
+                if not at the top-level.
+            default: ""
+        controller:
+            description: Name of controller to be used.
+            type: string
+        series:
+            description: Series (eg xenial, trusty) if not specified by the charm.
+            type: string
+            default: ""
+    required: ['charm-name', 'repo']
 build-bundle:
     description: Build and release bundle.
     params:
@@ -16,7 +45,7 @@ build-bundle:
             type: string
     required: ['bundle-name', 'repo']
 build-on-commit:
-    description: Add a job job that would build a charm upon commit.
+    description: Add a job that would build a charm upon commit.
     params:
         charm-name:
             description: Name of the charm.

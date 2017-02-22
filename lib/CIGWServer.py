@@ -183,6 +183,29 @@ def trigger_job_from_webhook(job, token):
         jclient.build_job(job)
     return str(next_build_number)
 
+#
+# Trigger job for testing a PR based on cwr job id
+#
+@app.route(rest_path + "/pr-trigger/<string:job>/<string:token>",
+           methods=['POST'])
+def trigger_pr_job_from_webhook(job, token):
+
+    if not validate_hook_token(job, token):
+        abort(400)
+
+    if request.headers.get('X-GitHub-Event') == 'ping':
+        return "pong"
+
+    datastr = request.form['payload']
+    data = loads(datastr)
+    if data['action'] not in ['opened', 'synchronize']:
+        return "Action {} does not require CWR testing".format(data['action'])
+
+    jclient = get_jenkins_client()
+    next_build_number = jclient.get_job_info(job)['nextBuildNumber']
+    jclient.build_job(job, {'PR_ID': data['number']})
+    return str(next_build_number)
+
 
 @app.route("/")
 @app.route("/<path:filepath>")
