@@ -47,7 +47,6 @@ def add_job():
         context={
             "repo": repo,
             "bundle_name": bundle_name,
-            "bundle_fname": bundle_fname,
             "controller": controller or "",
             "branch": branch,
             "cwr_charm_home": charm_home,

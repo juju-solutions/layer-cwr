@@ -56,10 +56,6 @@
   <builders>
     <hudson.tasks.Shell>
       <command>#!/bin/bash
-set -ex
-
-{{skip_builds}}
-
 # Quick check repo points to a charm
 if [ ! -f "./{{charm_subdir}}/metadata.yaml" ]
 then
@@ -68,126 +64,20 @@ then
     exit 1
 fi
 
-if [ ! -z $RELEASE_TAG ]
-then
-    echo "Moving to relase tag $RELEASE_TAG"
-    git checkout $RELEASE_TAG
-fi
+set -e
 
-export JUJU_REPOSITORY=&quot;/tmp/&quot;
-OUTPUT_DIR="builds"
-SERIES_FLAG=""
-if [ ! -z "{{series}}" ]
-then
-    OUTPUT_DIR="{{series}}"
-    SERIES_FLAG="--series {{series}}"
-fi
+. ~/scripts/cwr-helpers.sh
 
-# Build layered charms, copy non-layered charms to output dir
-if [ -f "layer.yaml" ]
-then
-    charm build $SERIES_FLAG "{{charm_subdir}}"
-else
-    mkdir -p $JUJU_REPOSITORY/$OUTPUT_DIR
-    rm -rf $JUJU_REPOSITORY/$OUTPUT_DIR/{{charmname}}
-    cp -a `pwd` $JUJU_REPOSITORY/$OUTPUT_DIR/{{charmname}}
-fi
+{{skip_builds}}
 
-# Keep track of the controllers and models we want CWR to run
-CONTROLLERS=""
-MODELS_TO_TEST=""
+checkout_release_tag
 
-# If not specified, CWR will run on all registered controllers
-if [ -z "{{controller}}" ]
-then
-    CONTROLLERS=`cat /var/lib/jenkins/controller.names`
-else
-    CONTROLLERS={{controller}}
-fi
-
-for controller in $CONTROLLERS
-do
-    juju switch ${controller}
-
-    # we have to figure out which credential to use because of:
-    # https://bugs.launchpad.net/juju/+bug/1652171
-    cloud=$(juju add-model wont-be-added --credential invalid-credential 2>&amp;1 | sed -e 's/.*cloud "\?\([^ "]*\)"\?.*/\1/')
-    credential_arg=""
-    if [[ $cloud != localhost* &amp;&amp; $cloud != lxd ]]; then
-        if ! juju credentials --format=json | grep -q $cloud; then
-            echo 'This cloud requires a credential which was not found.'
-            echo 'Please use set-credentials to add the credential.'
-            exit 1
-        fi
-        credential=$(juju credentials --format=json | jq -r '.credentials.'${cloud}'."cloud-credentials" | keys[0]')
-        credential_arg="--credential=$credential"
-     fi
-    juju add-model test-{{charmname}}-$BUILD_NUMBER $credential_arg
-
-    # Keep track of all the models we want CWR to test
-    MODELS_TO_TEST+="${controller}:test-{{charmname}}-$BUILD_NUMBER "
-
-    # We want models for all controllers destroyed when this shell exits
-    eval "function cleanup_${controller}_model() { sleep 10; juju destroy-model ${controller}:test-{{charmname}}-$BUILD_NUMBER -y; }"
-    old_trap=`trap -p EXIT | awk -F"'" '{print $2}'`
-    new_trap="cleanup_${controller}_model;${old_trap}"
-    trap "${new_trap}" EXIT
-done
-
-function update_bundle() {
-    cat &lt;&lt;EOP
-import yaml
-with open('/tmp/bundles/{{bundle_fname}}/bundle.yaml', 'r') as fp:
-    bundle = yaml.safe_load(fp)
-app = bundle.get('applications', bundle.get('services', {}))['{{bundle_app_name}}']
-app['charm'] = '/tmp/$OUTPUT_DIR/{{charmname}}'
-with open('/tmp/bundles/{{bundle_fname}}/bundle-cwr.yaml', 'w') as fp:
-    yaml.dump(bundle, fp)
-EOP
-}
-[ -e /tmp/bundles ] || mkdir /tmp/bundles
-rm -rf /tmp/bundles/{{bundle_fname}}
-charm pull "{{bundle_name}}" /tmp/bundles/{{bundle_fname}}
-python3 -c "$(update_bundle)"
-
-# Generate the test plan yaml
-rm -f totest.yaml
-echo "bundle: /tmp/bundles/{{bundle_fname}}" &gt;&gt; totest.yaml
-echo "bundle_name: {{job_name}}" &gt;&gt; totest.yaml
-echo "bundle_file: bundle-cwr.yaml" >> totest.yaml
-
-# We want cwr results to be moved to the workpspace even if cwr fails
-eval "function move_results() { cp /srv/artifacts/{{job_name}}/$BUILD_NUMBER/report.xml $WORKSPACE/report.xml; }"
-old_trap=`trap -p EXIT | awk -F"'" '{print $2}'`
-new_trap="move_results; ${old_trap}"
-trap "${new_trap}" EXIT
-
-# Link cwr artifacts for visibility in the jenkins job
-ARTIFACTS_DIR=/srv/artifacts/{{job_name}}/$BUILD_NUMBER
-mkdir -p $ARTIFACTS_DIR
-ln -s $ARTIFACTS_DIR /var/lib/jenkins/jobs/$JOB_NAME/builds/$BUILD_NUMBER/archive
-
-if [ ! -z $OUTPUT_SCENARIO ]
-then
-     FAKE_FILES_TAR=&quot;{{charm_home}}/templates/output-results/&quot;$OUTPUT_SCENARIO&quot;.tar.gz&quot;
-     tar -zxvf $FAKE_FILES_TAR -C $ARTIFACTS_DIR
-
-     if [[ $OUTPUT_SCENARIO == pass* ]]
-     then
-         exit 0
-     else
-         exit 1
-     fi
-else
-     env MATRIX_OUTPUT_DIR=$ARTIFACTS_DIR cwr -F ${MODELS_TO_TEST} totest.yaml --results-dir /srv/artifacts --test-id $BUILD_NUMBER
-fi
-
-if [ ! -z "{{pushtochannel}}" ]
-then
-     CHARM_LOCATION=`charm push /tmp/$OUTPUT_DIR/{{charmname}} cs:~{{lpid}}/{{charmname}} | head -1 | awk '{print $2}'`
-     charm release $CHARM_LOCATION --channel={{pushtochannel}}
-     charm grant $CHARM_LOCATION everyone --channel={{pushtochannel}}
-fi
+run_cwr_in_container "{{controller}}" "{{job_name}}"\
+                     "{{bundle_name}}" \
+                     "{{charm_name}}" "{{series}}" \
+                     "{{app_name_in_bundle}}" \
+                     "{{charm_subdir}}" \
+                     "{{pushtochannel}}" "{{lp_id}}"
       </command>
     </hudson.tasks.Shell>
   </builders>

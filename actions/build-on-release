@@ -20,7 +20,6 @@ from utils import (
     get_output_scenarios,
     REST_PORT,
     TRIGGER_PERIODICALLY,
-    SKIP_BUILDS,
     REFSPEC
 )  # noqa: E402
 
@@ -54,7 +53,7 @@ def add_job():
         branch = "*/master"
     elif repo_access == 'poll':
         trigger = TRIGGER_PERIODICALLY
-        skip_builds = SKIP_BUILDS
+        skip_builds = 'skip_builds'
         refspec = REFSPEC
         branch = "*/tags/*"
     else:
@@ -69,13 +68,11 @@ def add_job():
             "gitrepo": hookenv.action_get("repo"),
             "charm_subdir": hookenv.action_get("charm-subdir"),
             "pushtochannel": hookenv.action_get("push-to-channel") or "",
-            "lpid": hookenv.action_get("lp-id") or "",
+            "lp_id": hookenv.action_get("lp-id") or "",
             "branch": branch,
-            "charmname": charm_name,
-            "charm_fname": charm_fname,
+            "charm_name": charm_name,
             "bundle_name": bundle_name,
-            "bundle_fname": bundle_fname,
-            "bundle_app_name": bundle_app_name,
+            "app_name_in_bundle": bundle_app_name,
             "refspec": refspec,
             "series": hookenv.action_get("series") or "",
             "controller": hookenv.action_get("controller") or "",

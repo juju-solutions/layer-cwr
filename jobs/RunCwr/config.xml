@@ -18,7 +18,7 @@
         </hudson.model.StringParameterDefinition>
         <hudson.model.StringParameterDefinition>
           <name>CONTROLLER</name>
-          <description>Controller to run CWR against</description>
+          <description>Space-separated list of controllers to run CWR against</description>
           <defaultValue>lxd</defaultValue>
         </hudson.model.StringParameterDefinition>
       </parameterDefinitions>
@@ -34,34 +34,11 @@
   <builders>
     <hudson.tasks.Shell>
       <command>#!/bin/bash
-touch totest.yaml
-echo &quot;bundle: $BUILD_CHARM_TARGET&quot; &gt;&gt; totest.yaml
-echo &quot;bundle_name: $CHARM_NAME&quot; &gt;&gt; totest.yaml
-juju switch $CONTROLLER
+set -e
 
-# we have to figure out which credential to use because of:
-# https://bugs.launchpad.net/juju/+bug/1652171
-cloud=$(juju add-model wont-be-added --credential invalid-credential 2>&amp;1 | sed -e 's/.*cloud "\?\([^ "]*\)"\?.*/\1/')
-credential_arg=""
-if [[ "$cloud" != "localhost" &amp;&amp; "$cloud" != "lxd" ]]; then
-    if ! juju credentials --format=json | grep -q $cloud; then
-        echo 'This cloud requires a credential which was not found.'
-        echo 'Please use set-credentials to add the credential.'
-        exit 1
-    fi
-    credential=$(juju credentials --format=json | jq -r '.credentials.'${cloud}'."cloud-credentials" | keys[0]')
-    credential_arg="--credential=$credential"
- fi
-juju add-model test-{{charmname}}-$BUILD_NUMBER $credential_arg
-function cleanup_model() {
-    juju destroy-model test-{{charmname}}-$BUILD_NUMBER -y
-}
-trap cleanup_model EXIT
+. ~/scripts/cwr-helpers.sh
 
-ARTIFACTS_DIR=/srv/artifacts/{{charm_fname}}_in_{{bundle_fname}}/$BUILD_NUMBER
-mkdir -p ARTIFACTS_DIR
-ln -s $ARTIFACTS_DIR /var/lib/jenkins/jobs/$JOB_NAME/builds/$BUILD_NUMBER/archive
-env MATRIX_OUTPUT_DIR=$ARTIFACTS_DIR cwr -F $CONTROLLER:test-cwr-$CHARM_NAME-$BUILD_NUMBER totest.yaml --results-dir /srv/artifacts --test-id $BUILD_NUMBER
+run_cwr_in_container "$CONTROLLER" "$CHARM_NAME" "$BUILD_CHARM_TARGET"
 </command>
     </hudson.tasks.Shell>
   </builders>

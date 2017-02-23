@@ -1,10 +1,15 @@
-includes: ['layer:basic', 'interface:jenkins-extension', 'interface:cwr-ci']
+includes: ['layer:basic', 'layer:apt', 'interface:jenkins-extension', 'interface:cwr-ci']
 repo: https://github.com/juju-solutions/layer-cwr.git
 options:
   basic:
+    use_venv: true
+  apt:
     packages:
-      - unzip
+      - lxd
+      - juju
       - python-apport
       - python-yaml
       - jq
-    use_venv: true
+      - unzip
+      - gpgv2
+      - charm-tools

@@ -1,0 +1,30 @@
+options:
+  cwrbox_image:
+    description: |
+      URL from which to retrieve the cwrbox LXD image.
+      The image can also be provided as a Juju resource, with the
+      resource being used in favor of this URL if available.
+      The signature will be fetched as this URL with '.sig' added.
+    type: string
+    default: https://s3.amazonaws.com/jujubigdata/cwrbox/cwrbox.tar.gz
+  cwrbox_keys:
+    description: |
+      List of keys trusted to sign the cwrbox LXD image.
+      Keys can be either full keys, or full fingerprints (without spaces).
+      Key IDs (short nor long) cannot be used.
+    type: string
+    default: |
+      - 5762CA76ABD635A79185394EDB6E071B449C78B1  # johnsca@apache.org
+  install_sources:
+    description: PPAs from which to install LXD and Juju
+    type: string
+    default: |
+      - ppa:juju/stable
+      - ppa:ubuntu-lxc/lxd-stable
+  subnet:
+    description: |
+      Subnet to use for LXD containers, such as 10.0.0.1/24.
+      Must not conflict with other routable subnets.  If left
+      blank, a random 10.x.x.1/24 subnet will be selected.
+    type: string
+    default: ''

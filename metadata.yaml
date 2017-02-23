@@ -8,6 +8,11 @@ tags:
   - CI
 series: ["xenial"]
 subordinate: true
+resources:
+  cwrbox:
+    description: The LXD image used to run CWR.
+    type: file
+    filename: cwrbox.tar.gz
 requires:
   jenkins:
     interface: jenkins-extension

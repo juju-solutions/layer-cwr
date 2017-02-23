@@ -37,7 +37,7 @@ build-on-commit:
                 if not at the top-level.
             default: ""
         controller:
-            description: Name of controller to be used.
+            description: Name, or space-separated list, of controllers to be used.
             type: string
         push-to-channel:
             description: Charm store channel to push a successfull build. Leave empty to not push.

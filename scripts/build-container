@@ -1,0 +1,43 @@
+#!/bin/bash
+
+# Script to (re)build the LXD container tarball used by the charm.
+
+set -e
+output_dir=${1:-.}
+container=cwrbox-$$
+
+function RUN() {
+    lxc exec $container -- "$@"
+}
+
+function PUSH() {
+    src="$1"
+    dst="$(echo $2 | sed -e 's/^\///')"
+    shift 2
+    lxc file push "$src" $container/"$dst" "$@"
+}
+
+
+lxc launch ubuntu-xenial $container
+trap "lxc delete --force $container" EXIT
+
+# networking takes a half-second or so to come up
+# wait for it so that the subsequent commands don't fail
+while ! lxc info $container | grep -qE 'eth0:\sinet\s'; do
+    sleep 0.5
+done
+
+RUN add-apt-repository -y ppa:juju/stable
+RUN apt update -yq
+RUN apt install -y juju charm-tools unzip python3-pip squashfuse snapd
+RUN pip2 install 'git+https://github.com/juju-solutions/bundletester' \
+                 'git+https://github.com/juju-solutions/cloud-weather-report' \
+                 'git+https://github.com/juju/juju-crashdump'
+RUN pip3 install 'git+https://github.com/juju/python-libjuju' \
+                 'git+https://github.com/juju-solutions/matrix'
+RUN mkdir -p /srv/artifacts
+RUN mkdir -p /root/.local/share
+
+lxc stop $container
+lxc publish $container --alias cwrbox --public
+lxc image export cwrbox $output_dir/cwrbox

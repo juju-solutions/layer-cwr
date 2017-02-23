@@ -16,22 +16,6 @@ TRIGGER_PERIODICALLY = '''
     </hudson.triggers.SCMTrigger>
     '''
 
-SKIP_BUILDS = '''
-if [ ! -f "first-run.lock" ]; then
-  touch "first-run.lock"
-  echo "First run automatically triggered. Skipped."
-  touch results.xml
-  exit 0
-fi
-
-if test `find "first-run.lock" -mmin -1`
-then
-  echo "Skip build. Caused by tag already present in repo."
-  touch results.xml
-  exit 0
-fi
-'''
-
 REFSPEC = "<refspec>+refs/tags/*:refs/remotes/origin/tags/*</refspec>"
 
 HOOK_TOKENS_LIST_FILE = "/var/lib/jenkins/tokens.yaml"
@@ -129,15 +113,39 @@ def get_badge_path(job):
 
 
 def report_status():
-    if is_state('jenkins.jobs.failed'):
-        hookenv.status_set('blocked',
-                           'Failed to install Jenkins plugins. '
-                           'Retry by removing/adding cwr relation.')
+    if is_state('lxc.init.failed'):
+        hookenv.status_set('error', 'unable to init lxd')
+        return
+
+    if is_state('lxc.subnet.failed'):
+        hookenv.status_set("blocked",
+                           "unable to use subnet; set via config")
+        return
+
+    if is_state('lxc.subnet.full'):
+        hookenv.status_set("blocked",
+                           "unable to find a free subnet; set via config")
+        return
+
+    if is_state('cwrbox.key.failed'):
+        hookenv.status_set("blocked",
+                           "invalid or missing key for cwrbox image; "
+                           "set via config")
+        return
+
+    if is_state('cwrbox.image.failed'):
+        hookenv.status_set("blocked", "unable to fetch cwrbox image")
         return
 
     if not is_state('jenkins.available'):
         hookenv.status_set('waiting',
                            'Waiting for jenkins to become available.')
+        return
+
+    if is_state('jenkins.jobs.failed'):
+        hookenv.status_set('blocked',
+                           'Failed to install Jenkins plugins. '
+                           'Retry by removing/adding cwr relation.')
         return
 
     # jenkins.available is set from here on

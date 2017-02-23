@@ -11,7 +11,6 @@ from yaml import safe_load, dump
 from re import search
 
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', 'lib'))
-from utils import get_fname  # noqa: E402
 
 
 def execute(cmd, raise_exception=True):
@@ -77,17 +76,20 @@ class Bundle(object):
         else:
             self.ci_info = dict()  # or load some default ci_info
 
-        self.location = "cs:~{}/{}".format(self.ci_info['bundle']['namespace'], self.ci_info['bundle']['name'])
+        if 'charm-upgrade' in self.ci_info:
+            self.location = "cs:~{}/{}".format(
+                self.ci_info['bundle']['namespace'],
+                self.ci_info['bundle']['name'])
         self.upgraded = False
         self.fake_output = fake_output
 
         # We keep the sha1 digest/signature of the last bundle for
         # which we triggered a build in the follwing file
         self.signature_file = "last_bundle.signature"
+        self.CWR_command = ["/var/lib/jenkins/scripts/cwr-helpers.sh",
+                            "run_cwr_in_container"]
         if CWR_dry_run:
-            self.CWR_command = ["echo", "cwr"]
-        else:
-            self.CWR_command = ["cwr"]
+            self.CWR_command.insert(0, "echo")
 
         if store_push_dry_run:
             self.charm_command = ["echo", "charm"]
@@ -123,7 +125,7 @@ class Bundle(object):
         Returns: dictionary with upgrade instructions or None
 
         """
-        if charm_name in self.ci_info['charm-upgrade'].keys():
+        if self.ci_info and charm_name in self.ci_info['charm-upgrade'].keys():
             return self.ci_info['charm-upgrade'][charm_name]
         else:
             return None
@@ -220,7 +222,7 @@ class Bundle(object):
             f.write(digest)
         return digest
 
-    def test(self, build_num, models):
+    def test(self, build_num, controllers):
         """
         Run tests on the bundle.
 
@@ -229,21 +231,16 @@ class Bundle(object):
             models: the juju model to be used for deployments.
 
         """
-        with open('totest.yaml', 'w') as f:
-            f.write("bundle: {}\n".format(self.tempdir))
-            f.write("bundle_name: build-bundle-{}\n".format(get_fname(self.ci_info['bundle']['name'])))
-            f.write("bundle_file: bundle.yaml\n")
-
         if self.fake_output == "":
-            cmd = list(self.CWR_command)
-            cmd += ["-F"]
-            cmd += ["--results-dir", "/srv/artifacts"]
-            cmd += ["--test-id", build_num]
-            cmd += models
-            cmd += ["totest.yaml"]
+            cmd = self.CWR_command + [
+                ' '.join(controllers),
+                os.environ['JOB_NAME'],
+                self.tempdir,
+            ]
             execute(cmd)
         else:
-            output_dir = "/srv/artifacts/{}/{}/".format(os.environ['JOB_NAME'], build_num)
+            output_dir = "/srv/artifacts/{}/{}/".format(os.environ['JOB_NAME'],
+                                                        build_num)
             cmd_str = "tar -zxvf {} -C {}".format(self.fake_output, output_dir)
             cmd = cmd_str.split()
             execute(cmd)
@@ -385,7 +382,7 @@ class Coordinator(object):
                     store_push_dry_run=self.store_push_dry_run) as bundle:
             print("Checking {}".format(repo))
             charms = bundle.get_charms()
-            print("Charms in bunlde {}".format(charms))
+            print("Charms in bundle {}".format(charms))
             for charm in charms:
                 c = Charm(charm)
                 upgrade_info = bundle.get_charms_upgrade_policy(c.get_name())
@@ -422,7 +419,8 @@ class Coordinator(object):
         """
         output_scenario = ""
         if 'OUTPUT_SCENARIO' in os.environ:
-            output_scenario = os.environ['OUTPUT_SCENARIO']
+            output_scenario = '/var/lib/jenkins/mock-results/{}.tar.gz'.format(
+                os.environ['OUTPUT_SCENARIO'])
         with Bundle(repo, branch,
                     CWR_dry_run=self.CWR_dry_run,
                     store_push_dry_run=self.store_push_dry_run,
@@ -439,20 +437,25 @@ class Coordinator(object):
                     print("Upgrading to revision {} of channel {}"
                           .format(c.get_latest(upgrade_info["from-channel"]),
                                   upgrade_info["from-channel"]))
-                    bundle.upgrade(charm, c.get_latest(upgrade_info["from-channel"]))
+                    bundle.upgrade(charm,
+                                   c.get_latest(upgrade_info["from-channel"]))
             print("Testing new bundle")
             bundle.test(build_num, models)
-            print("Releasing bundle")
-            bundle.release()
-            for charm in charms:
-                c = Charm(charm)
-                upgrade_info = bundle.get_charms_upgrade_policy(c.get_name())
-                if upgrade_info and upgrade_info['release']:
-                    print("Releasing charm {} from channel {} to channel {}"
-                          .format(c.get_latest(upgrade_info["from-channel"]),
+            if bundle.ci_info and bundle.ci_info['bundle']['release']:
+                print("Releasing bundle")
+                bundle.release()
+                for charm in charms:
+                    c = Charm(charm)
+                    upgrade_info = bundle.get_charms_upgrade_policy(
+                        c.get_name())
+                    if upgrade_info and upgrade_info['release']:
+                        print("Releasing charm {} "
+                              "from channel {} to channel {}".format(
+                                  c.get_latest(upgrade_info["from-channel"]),
                                   upgrade_info["from-channel"],
                                   upgrade_info['to-channel']))
-                    c.release_latest(upgrade_info['from-channel'], upgrade_info['to-channel'])
+                        c.release_latest(upgrade_info['from-channel'],
+                                         upgrade_info['to-channel'])
 
 
 if __name__ == "__main__":
