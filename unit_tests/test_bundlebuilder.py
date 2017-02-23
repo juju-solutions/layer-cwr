@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 
+import os
 import unittest
 from scripts import bundlebuilder
 from unittest.mock import patch, mock_open
@@ -27,15 +28,16 @@ class TestBundlebuilder(unittest.TestCase):
 
     @patch('scripts.bundlebuilder.execute')
     def test_bundle(self, execute_mock):
-        with patch("builtins.open", mock_open(read_data=self.bundle_yaml)):
-            bundle = bundlebuilder.Bundle(
-                "http://github/myrepo",
-                "mybranch",
-                "myci-info.yaml",
-                CWR_dry_run=True,
-                store_push_dry_run=True)
-            bundle.test(build_num=1, models=["mymodel", "mymodel2"])
-            assert execute_mock.call_count is 2
+        with patch.dict(os.environ, {'JOB_NAME': 'build-bundle-mybundle'}):
+            with patch("builtins.open", mock_open(read_data=self.bundle_yaml)):
+                bundle = bundlebuilder.Bundle(
+                    "http://github/myrepo",
+                    "mybranch",
+                    "myci-info.yaml",
+                    CWR_dry_run=True,
+                    store_push_dry_run=True)
+                bundle.test(build_num=1, controllers=["lxd", "aws"])
+                assert execute_mock.call_count is 2
 
     @patch('scripts.bundlebuilder.execute')
     def test_charm(self, execute_mock):

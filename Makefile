@@ -16,7 +16,6 @@ apt_prereqs:
 lint: apt_prereqs
 	@tox --notest
 	@PATH=.tox/py34/bin:.tox/py35/bin flake8 $(wildcard hooks reactive lib unit_tests tests)
-	@charm proof
 
 .PHONY: unit_test
 unit_test: apt_prereqs
