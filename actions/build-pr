@@ -13,14 +13,10 @@ from charmhelpers.core import templating  # noqa: E402
 import cwrhelpers  # noqa: E402
 from jenkins import Jenkins, JenkinsException  # noqa: E402
 from utils import (
-    trigger_jenkins_job,
     get_hook_token,
     get_rest_path,
-    get_badge_path,
     get_output_scenarios,
     REST_PORT,
-    TRIGGER_PERIODICALLY,
-    SKIP_BUILDS,
     REFSPEC
 )  # noqa: E402
 
@@ -64,6 +60,8 @@ def add_job():
             "controller": hookenv.action_get("controller") or "",
             "charm_home": getcwd(),
             "job_name": job_name,
+            "output_scenarios": get_output_scenarios(),
+            "oauth": hookenv.action_get("oauth-token"),
         })
     try:
         jclient.create_job(job_name, job_contents)

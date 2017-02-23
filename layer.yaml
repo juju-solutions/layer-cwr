@@ -13,3 +13,4 @@ options:
       - unzip
       - gpgv2
       - charm-tools
+      - python3-github

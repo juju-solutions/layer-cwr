@@ -26,6 +26,9 @@ build-pr:
             description: Series (eg xenial, trusty) if not specified by the charm.
             type: string
             default: ""
+        oauth-token:
+            description: OAuth token to use to comment on the PR.
+            type: string
     required: ['charm-name', 'repo']
 build-bundle:
     description: Build and release bundle.
