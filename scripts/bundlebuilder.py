@@ -69,10 +69,10 @@ class Bundle(object):
         # Load the ci-info.yaml
         if ci_info_file:
             with open(ci_info_file, 'r+') as stream:
-                self.ci_info = safe_load(stream)
+                self.ci_info = safe_load(stream) or dict()
         elif os.path.isfile("{}/ci-info.yaml".format(self.tempdir)):
             with open("{}/ci-info.yaml".format(self.tempdir), 'r+') as stream:
-                self.ci_info = safe_load(stream)
+                self.ci_info = safe_load(stream) or dict()
         else:
             self.ci_info = dict()  # or load some default ci_info
 
