@@ -27,7 +27,7 @@ build-pr:
             type: string
             default: ""
         oauth-token:
-            description: OAuth token to use to comment on the PR.
+            description: OAuth token used to comment on the PR.
             type: string
     required: ['charm-name', 'repo']
 build-bundle:

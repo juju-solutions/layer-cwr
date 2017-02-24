@@ -183,6 +183,7 @@ def trigger_job_from_webhook(job, token):
         jclient.build_job(job)
     return str(next_build_number)
 
+
 #
 # Trigger job for testing a PR based on cwr job id
 #

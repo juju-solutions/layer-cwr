@@ -91,7 +91,7 @@ An example run of this action might look like this:
       controller=lxd
 
 Running this action will result in a new job in Jenkins called
-`charm-<charmname>`. You can have the job triggered  externally through a web hook
+`charm-<charm-name>`. You can have the job triggered  externally through a web hook
 or you can set periodic polling of your repository via the "repo-access"
 action parameter:
 
@@ -125,6 +125,47 @@ add a tag to your github repository. Note that calling this action with
 as the number of release tags already present in your repository.
 
 Combining the two jobs gives you a basic yet powerful CI workflow.
+
+
+## Build Pull Requests
+
+To automatically CI any pull requests submitted against a repository you will have
+to use the `build-pr` action. This action takes the following parameters:
+  - repo: The github repo of the charm or top layer
+  - charm-name: The name of the charm to test
+  - reference-bundle: Charm store URL of a bundle to use to test the
+    given charm (e.g.: `cs:bundle/mediawiki-single`).
+    If this is not provided, the charm must set it in its tests.yaml.
+  - controller (optional): Name of the controller to use for running the tests.
+    If you do not specify a controller tests will run on all registered
+    controllers.
+
+If you also want CWR CI to comment on the PR with the out come of the tests
+you must provide an OAuth token with proper permission. Please follow the instructions
+[here](https://help.github.com/articles/creating-an-access-token-for-command-line-use/).
+to produce such token. The action parameter used to hold the OAuth token is:
+  - oauth-token (optional): OAuth token to use to comment on the PR.push-to-channel: Channel to be used (e.g.: edge, beta, candidate, stable)
+
+An example run of this action might look like this:
+
+    juju run-action cwr/0 build-pr \
+      repo=https://github.com/juju-solutions/layer-cwr \
+      charm-name=cwr \
+      reference-bundle=cs:~juju-solutions/cwr-ci \
+      push-to-channel=edge \
+      lp-id=juju-solutions \
+      controller=lxd
+      oauth-token=1234567890
+
+Running this action will result in a new job in Jenkins called
+`pr_charm-<charm-name>`. This job is triggered directly from GitHub
+through webhooks. Should the action succeed the webhook url
+produced will have the following format:
+
+        http://<jenkins_machine>:5000/ci/v1.0/pr-trigger/<pr_charm-<charmname>>/<uuid>
+
+You will need to add this webhook under Settings->Webhooks
+of your github repository.
 
 
 # Using CWR to CI your Bundles
