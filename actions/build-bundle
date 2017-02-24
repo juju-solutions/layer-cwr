@@ -46,6 +46,7 @@ def add_job():
         target=None,
         context={
             "repo": repo,
+            "bundle_subdir": hookenv.action_get("bundle-subdir"),
             "bundle_name": bundle_name,
             "controller": controller or "",
             "branch": branch,

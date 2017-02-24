@@ -14,6 +14,12 @@ build-bundle:
         controller:
             description: Name of controller to be used.
             type: string
+        bundle-subdir:
+            description: |
+                Subdirectory in the repo where the bundle lives,
+                if not at the top-level.
+            default: "."
+
     required: ['bundle-name', 'repo']
 build-on-commit:
     description: Add a job job that would build a charm upon commit.

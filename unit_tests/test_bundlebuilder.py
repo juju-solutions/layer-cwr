@@ -33,6 +33,7 @@ class TestBundlebuilder(unittest.TestCase):
                 bundle = bundlebuilder.Bundle(
                     "http://github/myrepo",
                     "mybranch",
+                    "insidedir",
                     "myci-info.yaml",
                     CWR_dry_run=True,
                     store_push_dry_run=True)
