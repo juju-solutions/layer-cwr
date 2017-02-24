@@ -314,14 +314,6 @@ function run_cwr() {
     if [[ $? == 0 && -n "$push_to_channel" && -n "$lp_id" ]]; then
         release_charm $charm_build_dir $lp_id $series $charm_name $push_to_channel
     fi
-
-    if [[ -n $PR_ID && -n $TOKEN]]; then
-        if [[ $? == 0 ]]; then
-            ~/scripts/send-comment.py $TOKEN $REPO $PR_ID "PR passed Cloud Weather Report tests"
-        else
-            ~/scripts/send-comment.py $TOKEN $REPO $PR_ID "PR failed Cloud Weather Report tests"
-        fi
-    fi
 }
 
 
