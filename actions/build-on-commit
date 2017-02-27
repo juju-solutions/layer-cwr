@@ -54,7 +54,7 @@ def add_job():
         cwrhelpers.fail_action("The repo-access can only be "
                                "'webhooks' or 'poll'")
 
-    job_name = "charm_{}_in_{}".format(charm_fname, bundle_fname)
+    job_name = "cwr_charm_{}_commit_with_{}".format(charm_fname, bundle_fname)
     job_contents = templating.render(
         source="BuildMyCharm/config.xml",
         target=None,

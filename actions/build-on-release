@@ -60,7 +60,7 @@ def add_job():
         cwrhelpers.fail_action('The repo-access can only be '
                                '"webhooks" or "poll"')
 
-    job_name = "release_charm_{}".format(charm_fname)
+    job_name = "cwr_charm_{}_tag_with_{}".format(charm_fname, bundle_fname)
     job_contents = templating.render(
         source="BuildMyCharm/config.xml",
         target=None,
@@ -94,7 +94,7 @@ def add_job():
     badge_url = "http://<Jenkins_machine>:{}{}".format(
         REST_PORT, get_badge_path(job_name))
 
-    # Need to trigger the job fir the first time in case of poll
+    # Need to trigger the job for the first time in case of poll
     # or return the webhook
     if repo_access == 'poll':
         trigger_jenkins_job(jclient, job_name)
