@@ -127,6 +127,9 @@ function run_in_container() {
         exit 1
     fi
 
+    echo "Freshening container"
+    lxc exec $container -- apt update -yq
+
     # Run the command.
     echo "Execing container"
     lxc exec $container --env=JOB_NAME="$JOB_NAME" \
