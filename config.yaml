@@ -15,6 +15,7 @@ options:
     type: string
     default: |
       - 5762CA76ABD635A79185394EDB6E071B449C78B1  # johnsca@apache.org
+      - 41990B866D39752AFCF2BB48CA9FECE740A9923F  # kmonroe@gmail.com
   install_sources:
     description: PPAs from which to install LXD and Juju
     type: string
