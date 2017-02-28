@@ -1,37 +1,7 @@
-build-pr:
-    description: Add a job that would build a charm upon a PR request.
-    params:
-        charm-name:
-            description: Name of the charm.
-            type: string
-        reference-bundle:
-            description: |
-                Charm store URL for a bundle to use to test the given
-                charm. For example, "~charmers/mediawiki-single".
-                If this is not provided, the charm must set it in its tests.yaml.
-            type: string
-            default: ""
-        repo:
-            description: Git repository for the charm to watch.
-            type: string
-        charm-subdir:
-            description: |
-                Subdirectory in the repo where the charm lives,
-                if not at the top-level.
-            default: ""
-        controller:
-            description: Name of controller to be used.
-            type: string
-        series:
-            description: Series (eg xenial, trusty) if not specified by the charm.
-            type: string
-            default: ""
-        oauth-token:
-            description: OAuth token used to comment on the PR.
-            type: string
-    required: ['charm-name', 'repo']
-build-bundle:
-    description: Build and release bundle.
+cwr-bundle:
+    description: |
+      Add a job that will test a bundle when contents from the charm store
+      change.
     params:
         repo:
             description: Git repository.
@@ -44,11 +14,18 @@ build-bundle:
             description: Name of the bundle.
             type: string
         controller:
-            description: Name of controller to be used.
+            description: Name or space-separated list of controllers to be used.
             type: string
+        bundle-subdir:
+            description: |
+                Subdirectory in the repo where the bundle lives,
+                if not at the top-level.
+            default: "."
+
     required: ['bundle-name', 'repo']
-build-on-commit:
-    description: Add a job that would build a charm upon commit.
+cwr-charm-commit:
+    description: |
+      Add a job that will test a charm when charm source is committed.
     params:
         charm-name:
             description: Name of the charm.
@@ -69,15 +46,19 @@ build-on-commit:
                 if not at the top-level.
             default: ""
         controller:
-            description: Name, or space-separated list, of controllers to be used.
+            description: Name or space-separated list of controllers to be used.
             type: string
         push-to-channel:
             description: Charm store channel to push a successfull build. Leave empty to not push.
             type: string
             default: ""
-        lp-id:
-            description: Launchpad ID (namespace) under which the charm will be uploaded.
+        namespace:
+            description: |
+              Charm store namespace (typically a Launchpad ID) to release a
+              charm upon successful test. An empty string (the default) will
+              not attempt any charm release.
             type: string
+            default: ""
         branch:
             description: Branch to build.
             type: string
@@ -91,8 +72,10 @@ build-on-commit:
             default: "webhooks"
             type: string
     required: ['charm-name', 'repo']
-build-on-release:
-    description: Add a job that would build a charm upon release.
+cwr-charm-pr:
+    description: |
+      Add a job that will test a charm when a charm source pull request is
+      created. Currently only supports Github PRs.
     params:
         charm-name:
             description: Name of the charm.
@@ -113,15 +96,65 @@ build-on-release:
                 if not at the top-level.
             default: ""
         controller:
-            description: Name of controller to be used.
+            description: Name or space-separated list of controllers to be used.
             type: string
         push-to-channel:
             description: Charm store channel to push a successfull build. Leave empty to not push.
             type: string
             default: ""
-        lp-id:
-            description: Launchpad ID (namespace) under which the charm will be uploaded.
+        namespace:
+            description: |
+              Charm store namespace (typically a Launchpad ID) to release a
+              charm upon successful test. An empty string (the default) will
+              not attempt any charm release.
             type: string
+            default: ""
+        series:
+            description: Series (eg xenial, trusty) if not specified by the charm.
+            type: string
+            default: ""
+        oauth-token:
+            description: OAuth token used to comment on the PR.
+            type: string
+    required: ['charm-name', 'repo']
+cwr-charm-release:
+    description: |
+      Add a job that will test a charm when charm source is released. Currently
+      only supports Github releases. See Github Release Tags for more
+      information.
+    params:
+        charm-name:
+            description: Name of the charm.
+            type: string
+        reference-bundle:
+            description: |
+                Charm store URL for a bundle to use to test the given
+                charm. For example, "~charmers/mediawiki-single".
+                If this is not provided, the charm must set it in its tests.yaml.
+            type: string
+            default: ""
+        repo:
+            description: Git repository for the charm to watch.
+            type: string
+        charm-subdir:
+            description: |
+                Subdirectory in the repo where the charm lives,
+                if not at the top-level.
+            default: ""
+        controller:
+            description: Name or space-separated list of controllers to be used.
+            type: string
+        push-to-channel:
+            description: Charm store channel to push a successfull build. Leave empty to not push.
+            type: string
+            default: ""
+        namespace:
+            description: |
+              Charm store namespace (typically a Launchpad ID) to release a
+              charm upon successful test. An empty string (the default) will
+              not attempt any charm release.
+            type: string
+            default: ""
         series:
             description: Series (eg xenial, trusty) if not specified by the charm.
             type: string

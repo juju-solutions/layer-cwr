@@ -30,7 +30,7 @@ function skip_builds() {
 function checkout_release_tag() {
     if [ ! -z $RELEASE_TAG ]
     then
-        echo "Moving to relase tag $RELEASE_TAG"
+        echo "Moving to release tag $RELEASE_TAG"
         git checkout $RELEASE_TAG
     fi
 }
@@ -133,6 +133,9 @@ function run_in_container() {
         >&2 echo 'Container does not have network connectivity'
         exit 1
     fi
+
+    echo "Freshening container"
+    lxc exec $container -- apt update -yq
 
     # Run the command.
     echo "Execing container"

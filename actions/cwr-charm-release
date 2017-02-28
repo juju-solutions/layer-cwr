@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 
+from os import getcwd
 import sys
 sys.path.append('lib')
 
@@ -19,12 +20,13 @@ from utils import (
     get_output_scenarios,
     REST_PORT,
     TRIGGER_PERIODICALLY,
+    REFSPEC
 )  # noqa: E402
 
 
 def add_job():
     '''
-    Adds a job to be triggered upon a commit on github
+    Adds a job to be triggered when a release on github is marked
 
     '''
     jenkins_relation = (RelationBase.from_state('jenkins.available'))
@@ -47,14 +49,18 @@ def add_job():
     if repo_access == 'webhooks':
         trigger = ""
         skip_builds = ""
+        refspec = ""
+        branch = "*/master"
     elif repo_access == 'poll':
         trigger = TRIGGER_PERIODICALLY
         skip_builds = 'skip_builds'
+        refspec = REFSPEC
+        branch = "*/tags/*"
     else:
-        cwrhelpers.fail_action("The repo-access can only be "
-                               "'webhooks' or 'poll'")
+        cwrhelpers.fail_action('The repo-access can only be '
+                               '"webhooks" or "poll"')
 
-    job_name = "charm_{}_in_{}".format(charm_fname, bundle_fname)
+    job_name = "cwr_charm_release_{}_in_{}".format(charm_fname, bundle_fname)
     job_contents = templating.render(
         source="BuildMyCharm/config.xml",
         target=None,
@@ -62,14 +68,15 @@ def add_job():
             "gitrepo": hookenv.action_get("repo"),
             "charm_subdir": hookenv.action_get("charm-subdir"),
             "pushtochannel": hookenv.action_get("push-to-channel") or "",
-            "lp_id": hookenv.action_get("lp-id") or "",
-            "branch": hookenv.action_get("branch"),
+            "lp_id": hookenv.action_get("namespace"),
+            "branch": branch,
             "charm_name": charm_name,
             "bundle_name": bundle_name,
             "app_name_in_bundle": bundle_app_name,
-            "refspec": "",
+            "refspec": refspec,
             "series": hookenv.action_get("series") or "",
             "controller": hookenv.action_get("controller") or "",
+            "charm_home": getcwd(),
             "trigger": trigger,
             "skip_builds": skip_builds,
             "job_name": job_name,

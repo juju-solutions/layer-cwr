@@ -177,7 +177,8 @@ def trigger_job_from_webhook(job, token):
 
     jclient = get_jenkins_client()
     next_build_number = jclient.get_job_info(job)['nextBuildNumber']
-    if job.startswith("charm_"):
+    if job.startswith("cwr_charm"):
+        # RELEASE_TAG is a required param for charm jobs
         jclient.build_job(job, {'RELEASE_TAG': tag_name})
     else:
         jclient.build_job(job)

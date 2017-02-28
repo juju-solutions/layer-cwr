@@ -46,6 +46,7 @@ class Bundle(object):
     def __init__(self,
                  repo,
                  branch,
+                 subdir,
                  ci_info_file=None,
                  CWR_dry_run=False,
                  store_push_dry_run=False,
@@ -56,22 +57,26 @@ class Bundle(object):
         Args:
             repo: repository to grab the bundle from
             branch: branch to grab the bundle from
+            subdir: sub dir where the bundle is located
             ci_info_file: override the bundle's ci-info.yaml file
             CWR_dry_run: perform a dry run on running the tests
             store_push_dry_run: perform a dry run on pushing to the store
             fake_output: path to a tarball with fake output
         """
         self.tempdir = mkdtemp()
+        self.subdir = subdir
+        self.bundle_path = "{}/{}/bundle.yaml".format(self.tempdir, subdir)
+        self.ci_info_path = "{}/{}/ci-info.yaml".format(self.tempdir, subdir)
         execute(["git", "clone", repo, "--branch", branch, "{}/".format(self.tempdir)])
-        with open("{}/bundle.yaml".format(self.tempdir), 'r+') as stream:
+        with open(self.bundle_path, 'r+') as stream:
             self.bundle = safe_load(stream)
 
         # Load the ci-info.yaml
         if ci_info_file:
             with open(ci_info_file, 'r+') as stream:
                 self.ci_info = safe_load(stream) or dict()
-        elif os.path.isfile("{}/ci-info.yaml".format(self.tempdir)):
-            with open("{}/ci-info.yaml".format(self.tempdir), 'r+') as stream:
+        elif os.path.isfile(self.ci_info_path):
+            with open(self.ci_info_path, 'r+') as stream:
                 self.ci_info = safe_load(stream) or dict()
         else:
             self.ci_info = dict()  # or load some default ci_info
@@ -144,7 +149,7 @@ class Bundle(object):
             if service['charm'] == charm and service['charm'] != new_revision:
                 service['charm'] = new_revision
                 self.upgraded = True
-                with open("{}/bundle.yaml".format(self.tempdir), 'w') as fp:
+                with open(self.bundle_path, 'w') as fp:
                     dump(self.bundle, fp)
 
     def upgradable(self):
@@ -235,7 +240,7 @@ class Bundle(object):
             cmd = self.CWR_command + [
                 ' '.join(controllers),
                 os.environ['JOB_NAME'],
-                self.tempdir,
+                "{}/{}".format(self.tempdir, self.subdir),
             ]
             execute(cmd)
         else:
@@ -258,7 +263,7 @@ class Bundle(object):
             return False
 
         cmd = list(self.charm_command)
-        cmd += ["push", self.tempdir, self.location]
+        cmd += ["push",  "{}/{}".format(self.tempdir, self.subdir), self.location]
         execute(cmd)
 
         _, output = execute(["charm", "show", self.location, "-c", "unpublished", "id"])
@@ -367,17 +372,18 @@ class Coordinator(object):
         self.CWR_dry_run = CWR_dry_run
         self.store_push_dry_run = store_push_dry_run
 
-    def check_bundle(self, repo, branch):
+    def check_bundle(self, repo, branch, subdir):
         """
         See if the bundle needs to be updated
         Args:
             repo: repository to grab the bundle from
             branch: branch  to grab the bundle from
+            subdir: dir inside the repo where the bundle is
 
         Returns: True if a newer version of a charm is present
 
         """
-        with Bundle(repo, branch,
+        with Bundle(repo, branch, subdir,
                     CWR_dry_run=self.CWR_dry_run,
                     store_push_dry_run=self.store_push_dry_run) as bundle:
             print("Checking {}".format(repo))
@@ -407,12 +413,13 @@ class Coordinator(object):
                 else:
                     return False
 
-    def test_and_release_bundle(self, repo, branch, build_num, models):
+    def test_and_release_bundle(self, repo, branch, subdir, build_num, models):
         """
         Build, test and release the bundle
         Args:
             repo: repository to grab the bundle from
             branch: branch  to grab the bundle from
+            subdir: dir inside the repo where the bundle is
             build_num: Build ID number
             models: Juju models to use for testing the bundle
 
@@ -421,7 +428,7 @@ class Coordinator(object):
         if 'OUTPUT_SCENARIO' in os.environ:
             output_scenario = '/var/lib/jenkins/mock-results/{}.tar.gz'.format(
                 os.environ['OUTPUT_SCENARIO'])
-        with Bundle(repo, branch,
+        with Bundle(repo, branch, subdir,
                     CWR_dry_run=self.CWR_dry_run,
                     store_push_dry_run=self.store_push_dry_run,
                     fake_output=output_scenario) as bundle:
@@ -460,9 +467,12 @@ class Coordinator(object):
 
 if __name__ == "__main__":
     if "--help" in sys.argv or len(sys.argv) == 1:
+        # TODO(kjackal): make these non positional params
         print("Usage: {} <operation> <repo> <branch> <model>\n".format(sys.argv[0]))
         print("  <operation>: 'check' or 'build' to check or build the bundle.")
         print("  <repo>: repo of the bundle.")
+        print("  <bundle_subdir>: subdirectory within the repo where the bundle is. "
+              "Use . for no subdir.")
         print("  <branch>: branch to grab the bundle from.")
         print("  <build_id>: id of the build.")
         print("  <list of models>: models to be used for testing. Needed only for 'build' operation.")
@@ -470,14 +480,15 @@ if __name__ == "__main__":
     operation = sys.argv[1]
     repo = sys.argv[2]
     branch = sys.argv[3]
+    subdir = sys.argv[4]
     tester = Coordinator()
     if operation == "check":
-        if tester.check_bundle(repo, branch):
+        if tester.check_bundle(repo, branch, subdir):
             sys.exit(0)
         else:
             sys.exit(1)
     else:
-        build_num = sys.argv[4]
-        models = sys.argv[5:]
-        tester.test_and_release_bundle(repo, branch, build_num, models)
+        build_num = sys.argv[5]
+        models = sys.argv[6:]
+        tester.test_and_release_bundle(repo, branch, subdir, build_num, models)
         sys.exit(0)
