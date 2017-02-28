@@ -1,5 +1,7 @@
-build-bundle:
-    description: Build and release bundle.
+cwr-bundle:
+    description: |
+      Add a job that will test a bundle when contents from the charm store
+      change.
     params:
         repo:
             description: Git repository.
@@ -21,8 +23,9 @@ build-bundle:
             default: "."
 
     required: ['bundle-name', 'repo']
-build-on-commit:
-    description: Add a job job that would build a charm upon commit.
+cwr-charm-commit:
+    description: |
+      Add a job that will test a charm when charm source is committed.
     params:
         charm-name:
             description: Name of the charm.
@@ -69,8 +72,9 @@ build-on-commit:
             default: "webhooks"
             type: string
     required: ['charm-name', 'repo']
-build-on-release:
-    description: Add a job that would build a charm upon release.
+cwr-charm-tag:
+    description: |
+      Add a job that will test a charm when charm source is tagged.
     params:
         charm-name:
             description: Name of the charm.
