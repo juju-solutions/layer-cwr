@@ -59,7 +59,7 @@ We provide two actions that assist in wiring your github repository with the CI.
 ## Build On Commit
 
 If you want CWR to build your charm, test it and (optionally) release it to
-the charm store, call the `build-on-commit` action. This action takes the
+the charm store, call the `cwr-charm-commit` action. This action takes the
 following parameters:
   - repo: The github repo of the charm or top layer
   - charm-name: The name of the charm to test
@@ -69,7 +69,7 @@ following parameters:
   - controller (optional): Name of the controller to use for running the tests.
     If you do not specify a controller tests will run on all registered
     controllers.
-  - repo-access (optional): 'webhook' or 'poll'. By default the `build-on-commit`
+  - repo-access (optional): 'webhook' or 'poll'. By default the action
     will produce a URL to be used as a webhook that will trigger the build.
     Alternatively you can set repo-access to 'poll' to periodically
     (once every 5 minutes) to poll the repository for changes.
@@ -82,7 +82,7 @@ specify:
 
 An example run of this action might look like this:
 
-    juju run-action cwr/0 build-on-commit \
+    juju run-action cwr/0 cwr-charm-commit \
       repo=https://github.com/juju-solutions/layer-cwr \
       charm-name=cwr \
       reference-bundle=cs:~juju-solutions/cwr-ci \
@@ -95,7 +95,7 @@ Running this action will result in a new job in Jenkins called
 or you can set periodic polling of your repository via the "repo-access"
 action parameter:
 
-  - webhook: the `build-on-commit` action will output a web hook that you can use
+  - webhook: the action will output a web hook that you can use
     to trigger the build of your repository. You can get the output of the
     action with:
 
@@ -109,7 +109,7 @@ action parameter:
     of your github repository.
 
   - poll: when setting "repo-access" to 'poll' the jenkins job produced by
-    the `build-on-commit` action will poll your github repository for changes.
+    the action will poll your github repository for changes.
     Note that in this repo-access mode this charm will immediately trigger the
     an initial execution the jenkins jobs. This is required so that successive
     polls will correctly compute the source code delta from the previous poll.
@@ -118,7 +118,7 @@ action parameter:
 ## Build on Release
 
 If you want to drive your releases using tags directly from github, call the
-`build-on-release` juju action. This job has the same set of parameters as
+`cwr-charm-tag` juju action. This job has the same set of parameters as
 above but the ending jenkins job will build/test/push your charm only if you
 add a tag to your github repository. Note that calling this action with
 "repo-access" set to poll you will see as many initial jenkins job executions
@@ -131,9 +131,9 @@ Combining the two jobs gives you a basic yet powerful CI workflow.
 
 ## Build Bundle action
 
-With the `build-bundle` action you are able to update your bundles using the
-charms already released on the channels of the Juju store.
-`build-bundle` action takes the following parameters:
+With the `cwr-bundle` action, you are able to CI your bundles using the
+charms released in specific channels of the charm store. This action takes the
+following parameters:
   - repo: The github repo of the bundle
   - branch (optional): The branch of the github repo where the bundle is.
   - branch (optional): The branch of the github repo where the bundle is.
@@ -149,12 +149,12 @@ the bundle.yaml will be updated and all tests of the bundle will run.
 If the tests are successful this job could also release the bundle
 and the charms to the store.
 The job will run periodically (every 10 minutes), but you can also trigger the job
-via a webhook. The webhoock URL is shown in the `build-bundle` action's output
+via a webhook. The webhoock URL is shown in the action's output
 and would require you to perform a POST request with at least an empty payload
 (compatible to the [GitHub Push Event Webhook](https://developer.github.com/v3/activity/events/types/#pushevent)).
 
-The `build-bundle` action requires you to have a `ci-info.yaml` file in your bundle repository.
-Here is an example of how that yaml should look like:
+The `cwr-bundle` action requires you to have a `ci-info.yaml` file in your
+bundle repository. An example yaml should look like:
 
 ```
 bundle:
@@ -183,9 +183,9 @@ test.
 
 An example run of this action might look like this:
 
-    juju run-action cwr/0 build-bundle \
+    juju run-action cwr/0 cwr-bundle \
       repo=https://github.com/juju-solutions/bundle-cwr-ci \
-      branch=build-bundle  \
+      branch=master  \
       bundle-name=cwr-ci \
       controller=lxd
 
@@ -199,7 +199,7 @@ the job. To view the badge URL, run:
 
     juju show-action-output <action-id>
 
-with the action id of a `build-on-commit`, `build-on-release` or `build-bundle` action.
+with the action id of a `cwr-charm-commit`, `cwr-charm-tag` or `cwr-bundle` action.
 
 The badge URL is of the following form:
 
