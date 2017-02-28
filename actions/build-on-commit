@@ -62,7 +62,7 @@ def add_job():
             "gitrepo": hookenv.action_get("repo"),
             "charm_subdir": hookenv.action_get("charm-subdir"),
             "pushtochannel": hookenv.action_get("push-to-channel") or "",
-            "lp_id": hookenv.action_get("lp-id") or "",
+            "lp_id": hookenv.action_get("namespace"),
             "branch": hookenv.action_get("branch"),
             "charm_name": charm_name,
             "bundle_name": bundle_name,

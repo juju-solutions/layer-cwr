@@ -49,9 +49,13 @@ build-on-commit:
             description: Charm store channel to push a successfull build. Leave empty to not push.
             type: string
             default: ""
-        lp-id:
-            description: Launchpad ID (namespace) under which the charm will be uploaded.
+        namespace:
+            description: |
+              Charm store namespace (typically a Launchpad ID) to release a
+              charm upon successful test. An empty string (the default) will
+              not attempt any charm release.
             type: string
+            default: ""
         branch:
             description: Branch to build.
             type: string
@@ -93,9 +97,13 @@ build-on-release:
             description: Charm store channel to push a successfull build. Leave empty to not push.
             type: string
             default: ""
-        lp-id:
-            description: Launchpad ID (namespace) under which the charm will be uploaded.
+        namespace:
+            description: |
+              Charm store namespace (typically a Launchpad ID) to release a
+              charm upon successful test. An empty string (the default) will
+              not attempt any charm release.
             type: string
+            default: ""
         series:
             description: Series (eg xenial, trusty) if not specified by the charm.
             type: string
