@@ -77,8 +77,8 @@ following parameters:
 Should you decide to release a charm after a successful test, you can also
 specify:
   - push-to-channel: Channel to be used (e.g.: edge, beta, candidate, stable)
-  - lp-id: The launchpad ID/namespace you want the charm released under
-    (e.g.: `cs:~bigdata-dev/mycharm`)
+  - namespace: The namespace (typically a launchpad id) you want the charm
+    released under (e.g.: `awesome-team`)
 
 An example run of this action might look like this:
 
@@ -87,7 +87,7 @@ An example run of this action might look like this:
       charm-name=cwr \
       reference-bundle=cs:~juju-solutions/cwr-ci \
       push-to-channel=edge \
-      lp-id=juju-solutions \
+      namespace=juju-solutions \
       controller=lxd
 
 Running this action will result in a new job in Jenkins called
