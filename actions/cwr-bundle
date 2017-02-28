@@ -40,7 +40,7 @@ def add_job():
     charm_home = getcwd()
 
     # This job will "build" the bundle aka update, test, push to store
-    job_name = 'build_bundle_{}'.format(bundle_fname)
+    job_name = 'cwr_bundle_{}'.format(bundle_fname)
     job_contents = templating.render(
         source="BuildMyBundle/config-build.xml",
         target=None,
@@ -67,6 +67,7 @@ def add_job():
 
     hookenv.action_set({'hook.url': url})
     hookenv.action_set({'build.badge': badge_url})
+
 
 if __name__ == "__main__":
     add_job()

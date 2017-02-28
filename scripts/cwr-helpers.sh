@@ -30,7 +30,7 @@ function skip_builds() {
 function checkout_release_tag() {
     if [ ! -z $RELEASE_TAG ]
     then
-        echo "Moving to relase tag $RELEASE_TAG"
+        echo "Moving to release tag $RELEASE_TAG"
         git checkout $RELEASE_TAG
     fi
 }
