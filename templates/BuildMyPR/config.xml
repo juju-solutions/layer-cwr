@@ -74,8 +74,8 @@ run_cwr_in_container "{{controller}}" "{{job_name}}"\
                      "{{bundle_name}}" \
                      "{{charm_name}}" "{{series}}" \
                      "{{app_name_in_bundle}}" \
-                     "{{charm_subdir}}"
-
+                     "{{charm_subdir}}" \
+                     "{{pushtochannel}}" "{{lp_id}}"
       </command>
     </hudson.tasks.Shell>
   </builders>

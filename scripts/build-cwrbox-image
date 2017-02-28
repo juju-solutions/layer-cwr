@@ -18,7 +18,7 @@ function PUSH() {
 }
 
 
-lxc launch ubuntu-xenial $container
+lxc launch ubuntu:xenial $container
 trap "lxc delete --force $container" EXIT
 
 # networking takes a half-second or so to come up

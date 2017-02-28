@@ -16,8 +16,7 @@ from utils import (
     get_hook_token,
     get_rest_path,
     get_output_scenarios,
-    REST_PORT,
-    REFSPEC
+    REST_PORT
 )  # noqa: E402
 
 
@@ -42,7 +41,7 @@ def add_job():
         cwrhelpers.fail_action('Charm does not provide reference bundle '
                                'and none was provided to action')
 
-    job_name = "pr_charm_{}".format(charm_fname)
+    job_name = "cwr_charm_pr_{}_in_{}".format(charm_fname, bundle_fname)
     job_contents = templating.render(
         source="BuildMyPR/config.xml",
         target=None,
@@ -50,12 +49,10 @@ def add_job():
             "gitrepo": hookenv.action_get("repo"),
             "charm_subdir": hookenv.action_get("charm-subdir"),
             "pushtochannel": hookenv.action_get("push-to-channel") or "",
-            "lpid": hookenv.action_get("lp-id") or "",
-            "charmname": charm_name,
-            "charm_fname": charm_fname,
+            "lp_id": hookenv.action_get("namespace"),
+            "charm_name": charm_name,
             "bundle_name": bundle_name,
-            "bundle_fname": bundle_fname,
-            "bundle_app_name": bundle_app_name,
+            "app_name_in_bundle": bundle_app_name,
             "series": hookenv.action_get("series") or "",
             "controller": hookenv.action_get("controller") or "",
             "charm_home": getcwd(),
