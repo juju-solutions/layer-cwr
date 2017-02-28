@@ -52,11 +52,12 @@ Note that these actions are also available as jobs in Jenkins and can be run
 from the Jenkins workspace if desired.
 
 
-# Using CWR to build your Charms
+# Workflows
 
-We provide two actions that assist in wiring your github repository with the CI.
+CWR actions assist in wiring your github repository with the CI system in a
+variety of ways.
 
-## Build On Commit
+## CWR on Charm Source Commit
 
 If you want CWR to build your charm, test it and (optionally) release it to
 the charm store, call the `cwr-charm-commit` action. This action takes the
@@ -91,9 +92,9 @@ An example run of this action might look like this:
       controller=lxd
 
 Running this action will result in a new job in Jenkins called
-`charm-<charmname>`. You can have the job triggered  externally through a web hook
-or you can set periodic polling of your repository via the "repo-access"
-action parameter:
+`cwr-charm-commit-{charm-name}-in-{reference-bundle}`. You can have the job
+triggered  externally through a web hook or you can set periodic polling of
+your repository via the "repo-access" action parameter:
 
   - webhook: the action will output a web hook that you can use
     to trigger the build of your repository. You can get the output of the
@@ -115,21 +116,17 @@ action parameter:
     polls will correctly compute the source code delta from the previous poll.
 
 
-## Build on Release
+## CWR on Charm Source Release
 
 If you want to drive your releases using tags directly from github, call the
-`cwr-charm-tag` juju action. This job has the same set of parameters as
+`cwr-charm-release` action. This job has the same set of parameters as
 above but the ending jenkins job will build/test/push your charm only if you
-add a tag to your github repository. Note that calling this action with
+add a release tag to your github repository. Note that calling this action with
 "repo-access" set to poll you will see as many initial jenkins job executions
 as the number of release tags already present in your repository.
 
-Combining the two jobs gives you a basic yet powerful CI workflow.
 
-
-# Using CWR to CI your Bundles
-
-## Build Bundle action
+## CWR Bundles
 
 With the `cwr-bundle` action, you are able to CI your bundles using the
 charms released in specific channels of the charm store. This action takes the
@@ -188,6 +185,9 @@ An example run of this action might look like this:
       branch=master  \
       bundle-name=cwr-ci \
       controller=lxd
+
+
+Combining the above actions gives you a basic yet powerful CI workflow.
 
 
 # Build Badge
