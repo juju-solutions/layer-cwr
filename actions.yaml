@@ -72,9 +72,11 @@ cwr-charm-commit:
             default: "webhooks"
             type: string
     required: ['charm-name', 'repo']
-cwr-charm-tag:
+cwr-charm-release:
     description: |
-      Add a job that will test a charm when charm source is tagged.
+      Add a job that will test a charm when charm source is released. Currently
+      only supports Github releases. See Github Release Tags for more
+      information.
     params:
         charm-name:
             description: Name of the charm.
