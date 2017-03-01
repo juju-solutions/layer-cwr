@@ -74,6 +74,7 @@ following parameters:
     will produce a URL to be used as a webhook that will trigger the build.
     Alternatively you can set repo-access to 'poll' to periodically
     (once every 5 minutes) to poll the repository for changes.
+    See details below.
 
 Should you decide to release a charm after a successful test, you can also
 specify:
@@ -93,7 +94,7 @@ An example run of this action might look like this:
 
 Running this action will result in a new job in Jenkins called
 `cwr-charm-commit-{charm-name}-in-{reference-bundle}`. You can have the job
-triggered  externally through a web hook or you can set periodic polling of
+triggered externally through a web hook or you can set periodic polling of
 your repository via the "repo-access" action parameter:
 
   - webhook: the action will output a web hook that you can use
@@ -102,9 +103,10 @@ your repository via the "repo-access" action parameter:
 
         juju show-action-output <action_id>
 
-    Should the action succeed the webhook url produced will have the following format:
+    Should the action succeed, the webhook url produced will have the following
+    format:
 
-        http://<jenkins_machine>:5000/ci/v1.0/trigger/<charm-<charmname>>/<uuid>
+        http://<jenkins_machine>:5000/ci/v1.0/trigger/<job>/<uuid>
 
     You will need to add this webhook under Settings->Webhooks
     of your github repository.
@@ -119,11 +121,51 @@ your repository via the "repo-access" action parameter:
 ## CWR on Charm Source Release
 
 If you want to drive your releases using tags directly from github, call the
-`cwr-charm-release` action. This job has the same set of parameters as
-above but the ending jenkins job will build/test/push your charm only if you
-add a release tag to your github repository. Note that calling this action with
-"repo-access" set to poll you will see as many initial jenkins job executions
-as the number of release tags already present in your repository.
+`cwr-charm-release` action. This action has the same set of parameters as
+`cwr-charm-commit`, but the resulting job will build/test/push your charm only
+when you add a release tag to your github repository. Note that calling this
+action with "repo-access" set to 'poll' will result in as many initial jenkins
+job executions as the number of release tags present in your repository.
+
+Running this action will result in a new job in Jenkins called
+`cwr-charm-release-{charm-name}-in-{reference-bundle}`. You can have the job
+triggered externally through a web hook or you can set periodic polling of
+your repository via the "repo-access" parameter described above.
+
+
+## CWR on Charm Source Pull Requests
+
+To automatically CI any pull requests submitted against a repository, use the
+`cwr-charm-pr` action. This action has the same set of parameters as
+`cwr-charm-commit`, but the resulting job will build/test/push your charm only
+if you add a release tag to your github repository.
+
+If you also want CWR CI to comment on the PR with the out come of the tests,
+you must provide an OAuth token with proper permission. Please follow the instructions
+[here](https://help.github.com/articles/creating-an-access-token-for-command-line-use/)
+to produce a token. The action parameter used to set the OAuth token is:
+  - oauth-token (optional): OAuth token to use to comment on the PR.
+
+An example run of this action might look like this:
+
+    juju run-action cwr/0 cwr-charm-pr \
+      repo=https://github.com/juju-solutions/layer-cwr \
+      charm-name=cwr \
+      reference-bundle=cs:~juju-solutions/cwr-ci \
+      push-to-channel=edge \
+      namespace=juju-solutions \
+      controller=lxd \
+      oauth-token=1234567890
+
+Running this action will result in a new job in Jenkins called
+`cwr-charm-pr-{charm-name}-in-{reference-bundle}`. This job is triggered
+directly from GitHub with a web hook. Should the action succeed, the webhook
+url produced will have the following format:
+
+        http://<jenkins_machine>:5000/ci/v1.0/pr-trigger/<job>/<uuid>
+
+You will need to add this webhook under Settings->Webhooks of your github
+repository.
 
 
 ## CWR Bundles
@@ -141,7 +183,7 @@ following parameters:
 
 This action will create a Jenkins job that will grab
 the repository with your bundle, read the bundle.yaml and see if there are
-any charms that can be updated. If an update is possible
+any charms that can be updated. If an update is possible,
 the bundle.yaml will be updated and all tests of the bundle will run.
 If the tests are successful this job could also release the bundle
 and the charms to the store.
@@ -187,7 +229,8 @@ An example run of this action might look like this:
       controller=lxd
 
 
-Combining the above actions gives you a basic yet powerful CI workflow.
+The above actions give you a basic yet powerful CI workflow for charms and
+bundles.
 
 
 # Build Badge
@@ -199,7 +242,8 @@ the job. To view the badge URL, run:
 
     juju show-action-output <action-id>
 
-with the action id of a `cwr-charm-commit`, `cwr-charm-tag` or `cwr-bundle` action.
+with the action id of any of a `cwr-bundle`, `cwr-charm-commit`, or
+`cwr-charm-release` action.
 
 The badge URL is of the following form:
 

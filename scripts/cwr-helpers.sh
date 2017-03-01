@@ -36,6 +36,13 @@ function checkout_release_tag() {
 }
 
 
+function checkout_pull_request() {
+    echo "Checking out pull request $PR_ID"
+    git fetch origin pull/$PR_ID/head:prtotest$BUILD_NUMBER
+    git checkout prtotest$BUILD_NUMBER
+}
+
+
 function check_container_network() {
     lxc info $1 | grep -qE 'eth0:\sinet\s'
 }
@@ -135,6 +142,9 @@ function run_in_container() {
     lxc exec $container --env=JOB_NAME="$JOB_NAME" \
                         --env=WORKSPACE="/root/workspace" \
                         --env=BUILD_NUMBER="$BUILD_NUMBER" \
+                        --env=TOKEN="$TOKEN" \
+                        --env=REPO="$REPO" \
+                        --env=PR_ID="$PR_ID" \
                         -- "$@"
 }
 
@@ -293,7 +303,15 @@ function run_cwr() {
     if ! env MATRIX_OUTPUT_DIR=$artifacts_dir cwr -F $models totest.yaml --results-dir /srv/artifacts --test-id $BUILD_NUMBER
     then
         echo 'CWR reported failure'
+        if [[ -n $PR_ID && -n $TOKEN ]]; then
+            send-comment.py $TOKEN $REPO $PR_ID "PR failed Cloud Weather Report tests"
+        fi
         exit 1
+    fi
+
+    echo 'CWR reported success'
+    if [[ -n $PR_ID && -n $TOKEN ]]; then
+        send-comment.py $TOKEN $REPO $PR_ID "PR passed Cloud Weather Report tests"
     fi
 
     if [[ $? == 0 && -n "$push_to_channel" && -n "$lp_id" ]]; then

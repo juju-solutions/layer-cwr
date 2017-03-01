@@ -14,7 +14,7 @@ cwr-bundle:
             description: Name of the bundle.
             type: string
         controller:
-            description: Name of controller to be used.
+            description: Name or space-separated list of controllers to be used.
             type: string
         bundle-subdir:
             description: |
@@ -46,7 +46,7 @@ cwr-charm-commit:
                 if not at the top-level.
             default: ""
         controller:
-            description: Name, or space-separated list, of controllers to be used.
+            description: Name or space-separated list of controllers to be used.
             type: string
         push-to-channel:
             description: Charm store channel to push a successfull build. Leave empty to not push.
@@ -70,6 +70,51 @@ cwr-charm-commit:
         repo-access:
             description: Set this to 'wehooks' or 'poll'.
             default: "webhooks"
+            type: string
+    required: ['charm-name', 'repo']
+cwr-charm-pr:
+    description: |
+      Add a job that will test a charm when a charm source pull request is
+      created. Currently only supports Github PRs.
+    params:
+        charm-name:
+            description: Name of the charm.
+            type: string
+        reference-bundle:
+            description: |
+                Charm store URL for a bundle to use to test the given
+                charm. For example, "~charmers/mediawiki-single".
+                If this is not provided, the charm must set it in its tests.yaml.
+            type: string
+            default: ""
+        repo:
+            description: Git repository for the charm to watch.
+            type: string
+        charm-subdir:
+            description: |
+                Subdirectory in the repo where the charm lives,
+                if not at the top-level.
+            default: ""
+        controller:
+            description: Name or space-separated list of controllers to be used.
+            type: string
+        push-to-channel:
+            description: Charm store channel to push a successfull build. Leave empty to not push.
+            type: string
+            default: ""
+        namespace:
+            description: |
+              Charm store namespace (typically a Launchpad ID) to release a
+              charm upon successful test. An empty string (the default) will
+              not attempt any charm release.
+            type: string
+            default: ""
+        series:
+            description: Series (eg xenial, trusty) if not specified by the charm.
+            type: string
+            default: ""
+        oauth-token:
+            description: OAuth token used to comment on the PR.
             type: string
     required: ['charm-name', 'repo']
 cwr-charm-release:
@@ -97,7 +142,7 @@ cwr-charm-release:
                 if not at the top-level.
             default: ""
         controller:
-            description: Name of controller to be used.
+            description: Name or space-separated list of controllers to be used.
             type: string
         push-to-channel:
             description: Charm store channel to push a successfull build. Leave empty to not push.
