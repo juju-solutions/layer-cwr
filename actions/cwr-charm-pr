@@ -66,7 +66,7 @@ def add_job():
         cwrhelpers.fail_action(str(e))
 
     token = get_hook_token(job_name)
-    url = "http://<Jenkins_machine>:{}{}/pr-trigger/{}/{}".format(
+    url = "http://<cwr-ip>:{}{}/pr-trigger/{}/{}".format(
         REST_PORT, get_rest_path(), job_name, token)
 
     hookenv.action_set({'hook.url': url})

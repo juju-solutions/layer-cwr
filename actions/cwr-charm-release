@@ -88,10 +88,10 @@ def add_job():
         cwrhelpers.fail_action(str(e))
 
     token = get_hook_token(job_name)
-    url = "http://<Jenkins_machine>:{}{}/trigger/{}/{}".format(
+    url = "http://<cwr-ip>:{}{}/trigger/{}/{}".format(
         REST_PORT, get_rest_path(), job_name, token)
 
-    badge_url = "http://<Jenkins_machine>:{}{}".format(
+    badge_url = "http://<cwr-ip>:{}{}".format(
         REST_PORT, get_badge_path(job_name))
 
     # Need to trigger the job for the first time in case of poll
