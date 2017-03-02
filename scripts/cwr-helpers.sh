@@ -204,21 +204,46 @@ function copy_xml() {
 
 
 function release_charm() {
-    charm_build_dir="$1"
-    lp_id="$2"
-    series="$3"
-    charm_name="$4"
-    channel="$5"
+  # Push a directory to the charm store, release it and grant everyone access.
+  local charm_build_dir=$1
+  shift
+  local lp_id=$1
+  shift
+  local series=$1
+  shift
+  local charm_name=$1
+  shift
+  local channel=$1
+  shift
 
-    if [[ -n "$series" ]]; then
-        charm_id="cs:~$lp_id/$series/$charm_name"
-    else
-        charm_id="cs:~$lp_id/$charm_name"
-    fi
+  # The series is optional, check the third parameter for non empty string.
+  if [[ -n "${series}" ]]; then
+    local charm_id="cs:~${lp_id}/${series}/${charm_name}"
+  else
+    local charm_id="cs:~${lp_id}/${charm_name}"
+  fi
 
-    pushed_charm=`charm push $charm_build_dir $charm_id | head -1 | awk '{print $2}'`
-    charm release $pushed_charm --channel=$channel
-    charm grant $pushed_charm everyone --channel=$channel
+  local channel_flag=""
+  # The channel is optional, check the fifth parameter for non empty string.
+  if [[ -n "${channel}" ]]; then
+    channel_flag="--channel=${channel}"
+  fi
+
+  local resources=""
+  # Loop through the remaining parameter for potentially multiple resources.
+  for resource in "$@"; do
+    # Resources should be in the name=value touple per parameter.
+    resources="${resources} --resource ${resource}"
+  done
+
+  # Build the charm push command from the variables.
+  local push_cmd="charm push ${charm_build_dir} ${charm_id} ${resources}"
+  # Run the push command and capture the id of the pushed charm.
+  local pushed_charm=`${push_cmd} | head -1 | awk '{print $2}'`
+  # Release the charm to the specific channel.
+  charm release ${pushed_charm} ${channel_flag}
+  # Grant everyone read access to this charm in channel.
+  charm grant ${pushed_charm} ${channel_flag} everyone
 }
 
 
