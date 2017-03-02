@@ -325,7 +325,7 @@ function run_cwr() {
     echo "bundle_file: $bundle_file" >> totest.yaml
 
     artifacts_dir=$(job_output_dir "$job_title")
-    if ! env MATRIX_OUTPUT_DIR=$artifacts_dir cwr -F $models totest.yaml --results-dir /srv/artifacts --test-id $BUILD_NUMBER
+    if ! env MATRIX_OUTPUT_DIR=$artifacts_dir cwr -F -l DEBUG -v $models totest.yaml --results-dir /srv/artifacts --test-id $BUILD_NUMBER
     then
         echo 'CWR reported failure'
         if [[ -n $PR_ID && -n $TOKEN ]]; then
