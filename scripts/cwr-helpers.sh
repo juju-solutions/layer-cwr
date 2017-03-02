@@ -134,7 +134,7 @@ function run_in_container() {
         exit 1
     fi
 
-    echo "Freshening container"
+    echo "Updating container's packages"
     lxc exec $container -- apt update -yq
 
     # Run the command.
