@@ -19,7 +19,7 @@
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 
 This subordinate charm prepares a Jenkins master node to test Juju artifacts
-(charms and bundles).
+(charms and bundles). All tests are isolated in a LXC container.
 
 
 # Deployment
@@ -62,9 +62,26 @@ mirror options. See [Configuring Models][] for more information.
 
 # Configuration
 
-This charm needs access to your controller(s) to create models and allocate
-resources needed to run charm/bundle tests. The steps required to do this
-are covered in detail in the *Getting Started* section of the
+## Custom Test Container
+As mentioned earlier, all tests are isolated in a LXC container. The default
+container image includes all software necessary to run `cwr`. Optionally,
+you may provide your own container image. To create an image, see the
+`./scripts/build-cwrbox-image` utility. Use your custom image by either:
+
+* Attaching a resource to this charm:
+
+      juju attach cwr cwrbox=./myimage.tgz
+
+* Configuring this charm with the URL/key of a remotely hosted image:
+
+      juju config cwr \
+          cwrbox_image=<url> \
+          cwrbox_keys=<gpg-fingerprint-of-image-signer>
+
+## Grant Access to CWR
+To run tests, this charm needs access to your controller(s) to create models
+and allocate resources needed to run charm/bundle tests. The steps required to
+do this are covered in detail in the *Getting Started* section of the
 [cwr-ci bundle readme][cwr-ci bundle]. A summary of the procedure is as
 follows:
 

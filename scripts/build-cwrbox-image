@@ -1,6 +1,14 @@
 #!/bin/bash
 
 # Script to (re)build the LXD container tarball used by the charm.
+# You'll need to create a detached signature to store alongside the resultant
+# cwrbox.tar.gz image:
+#
+#    gpg --output cwrbox.tar.gz.sig --detach-sig cwrbox.tar.gz
+#
+# Ensure both files are uploaded to the location configured in config.yaml.
+# Also ensure the fingerprint of the key used to sign the image is listed
+# in config.yaml.
 
 set -e
 output_dir=${1:-.}
