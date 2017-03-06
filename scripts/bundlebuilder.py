@@ -448,10 +448,9 @@ class Coordinator(object):
                                    c.get_latest(upgrade_info["from-channel"]))
             print("Testing new bundle")
             bundle.test(build_num, models)
-            if bundle.ci_info and bundle.ci_info['bundle']['release']:
-                print("Releasing bundle")
-                bundle.release()
+            if bundle.ci_info:
                 for charm in charms:
+                    # See if we need to release a charm
                     c = Charm(charm)
                     upgrade_info = bundle.get_charms_upgrade_policy(
                         c.get_name())
@@ -463,6 +462,14 @@ class Coordinator(object):
                                   upgrade_info['to-channel']))
                         c.release_latest(upgrade_info['from-channel'],
                                          upgrade_info['to-channel'])
+                        # We are releasing the charm so the bundle should point
+                        # to the released one
+                        bundle.upgrade(charm,
+                                       c.get_latest(upgrade_info['to-channel']))
+
+            if bundle.ci_info and bundle.ci_info['bundle']['release']:
+                print("Releasing bundle")
+                bundle.release()
 
 
 if __name__ == "__main__":
