@@ -32,7 +32,7 @@ This charm is intended to be deployed as part of the [cwr-ci bundle][]:
 
     juju deploy cs:~juju-solutions/cwr-ci
 
-> **Note**: This bundle requires Juju 2.0 or greater.
+> **Note**: CWR requires Juju 2.1.0 or greater.
 
 This will deploy Jenkins with this charm acting as the charm/bundle test
 mechanism. More information about this deployment can be found in the

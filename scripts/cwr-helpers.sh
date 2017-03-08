@@ -262,15 +262,13 @@ function add_models() {
         # https://bugs.launchpad.net/juju/+bug/1652171
         cloud=$(juju add-model wont-be-added --credential invalid-credential 2>&1 | sed -e 's/.*cloud "\?\([^ "]*\)"\?.*/\1/')
         credential_arg=""
-        if [[ "$cloud" != "localhost" && "$cloud" != "lxd" ]]; then
-            if ! juju credentials --format=json | grep -q $cloud; then
-                echo 'This cloud requires a credential which was not found.'
-                echo 'Please use set-credentials to add the credential.'
-                exit 1
-            fi
-            credential=$(juju credentials --format=json | jq -r '.credentials.'${cloud}'."cloud-credentials" | keys[0]')
-            credential_arg="--credential=$credential"
+        if ! juju credentials --format=json | grep -q $cloud; then
+            echo 'This cloud requires a credential which was not found.'
+            echo 'Please use set-credentials to add the credential.'
+            exit 1
         fi
+        credential=$(juju credentials --format=json | jq -r '.credentials.'${cloud}'."cloud-credentials" | keys[0]')
+        credential_arg="--credential=$credential"
 
         model_name=$petname-$BUILD_NUMBER
         juju add-model $model_name $credential_arg

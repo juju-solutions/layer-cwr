@@ -4,6 +4,7 @@ maintainer: Juju Big Data <bigdata@lists.ubuntu.com>
 description: |
   Install Cloud Weather Report along with its toolchain needed for testing
   charms in the context of a CI.
+min-juju-version: '2.1.0'
 tags:
   - CI
 series: ["xenial"]
