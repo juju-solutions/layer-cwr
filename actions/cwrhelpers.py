@@ -6,8 +6,8 @@ import time
 import yaml
 
 sys.path.append('lib')
-import charms
-charms.layer.basic.activate_venv()
+from charms.layer.basic import activate_venv  # noqa: E402
+activate_venv()
 
 from charmhelpers.core import hookenv  # noqa: E402
 from jenkins import NotFoundException  # noqa: E402
@@ -181,4 +181,3 @@ def get_s3_options(s3_config_filename):
     s3_opt = '--bucket {} --results-dir {} --s3-creds {}{}'.format(
         bucket, results_dir, s3_config_filename, private_opt)
     return s3_opt
-

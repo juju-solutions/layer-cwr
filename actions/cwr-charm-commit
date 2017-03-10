@@ -3,7 +3,7 @@
 import sys
 sys.path.append('lib')
 
-from actions.cwrhelpers import get_s3_options
+from cwrhelpers import get_s3_options  # noqa: E402
 from charms.layer.basic import activate_venv  # noqa: E402
 activate_venv()
 
