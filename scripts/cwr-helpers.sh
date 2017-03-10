@@ -1,12 +1,16 @@
 #!/bin/bash
 
-set -e
+set -ex
 
 
 function add_exit_handler() {
+    # Prepend new handlers to the current set that execute on EXIT.
+    # EXIT fires when the shell stops, whether HUP, INT, or TERM.
     handler="$1"
     old_trap=`trap -p EXIT | awk -F"'" '{print $2}'`
-    trap "$handler ; $old_trap" EXIT
+
+    # We want *all* the handlers to fire, even if one fails (hence || true)
+    trap "$handler || true ; $old_trap"
 }
 
 
@@ -252,10 +256,9 @@ function add_models() {
     # If not specified, CWR will run on all registered controllers
     controllers="${@:-$(cat /var/lib/jenkins/controller.names)}"
     MODELS_TO_TEST=""
-
     petname=$(petname)
-    for controller in $controllers
-    do
+
+    for controller in $controllers; do
         juju switch $controller
 
         # we have to figure out which credential to use because of:
@@ -270,7 +273,7 @@ function add_models() {
         credential=$(juju credentials --format=json | jq -r '.credentials.'${cloud}'."cloud-credentials" | keys[0]')
         credential_arg="--credential=$credential"
 
-        model_name=$petname-$BUILD_NUMBER
+        model_name="job-$BUILD_NUMBER-$petname"
         juju add-model $model_name $credential_arg
         juju model-config -m $model_name test-mode=true
         juju grant admin admin $model_name || true
@@ -280,7 +283,19 @@ function add_models() {
     done
 
     function cleanup_models() {
-        for model in $MODELS_TO_TEST; do
+        # We can't simply destroy MODELS_TO_TEST because the matrix models
+        # won't be included. Destroy all models that start with job-#-,
+        # which is honored by matrix and will be unique to this jenkins job.
+        controllers=$(cat /var/lib/jenkins/controller.names)
+        MODELS_TO_KILL=""
+        for controller in $controllers; do
+            # return model names that start with our prefix, adding a new
+            # "$controller:" prefix so we can destroy models even if we're not
+            # switched into the appropriate juju controller.
+            MODELS_TO_KILL+="$(juju models --format json | jq -r '.models[].name' | grep ^job-$BUILD_NUMBER- | sed -e s/^/${controller}:/) "
+        done
+        for model in $MODELS_TO_KILL; do
+            echo "Destroying model $model"
             juju destroy-model $model -y
         done
     }
@@ -324,7 +339,9 @@ function run_cwr() {
     echo "bundle_file: $bundle_file" >> totest.yaml
 
     artifacts_dir=$(job_output_dir "$job_title")
-    if ! env MATRIX_OUTPUT_DIR=$artifacts_dir cwr -F -l DEBUG -v $models totest.yaml --results-dir /srv/artifacts --test-id $BUILD_NUMBER
+    if ! env MATRIX_MODEL_PREFIX="job-$BUILD_NUMBER-matrix" \
+      MATRIX_OUTPUT_DIR=$artifacts_dir cwr -F -l DEBUG -v $models totest.yaml \
+      --results-dir /srv/artifacts --test-id $BUILD_NUMBER
     then
         echo 'CWR reported failure'
         if [[ -n $PR_ID && -n $TOKEN ]]; then

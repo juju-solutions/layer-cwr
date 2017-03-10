@@ -64,7 +64,7 @@ then
     exit 1
 fi
 
-set -e
+set -ex
 
 . ~/scripts/cwr-helpers.sh
 
