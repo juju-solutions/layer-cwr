@@ -304,6 +304,7 @@ function run_cwr() {
     charm_subdir="$7"
     push_to_channel="$8"
     lp_id="$9"
+    s3_option="${10}"
     charm_build_dir="/tmp/${series:-builds}/$charm_name"
 
     if [[ -n "$charm_name" ]]; then

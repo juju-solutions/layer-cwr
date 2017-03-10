@@ -1,12 +1,13 @@
 #!/usr/bin/env python3
 
+import subprocess
 import sys
 import time
 import yaml
 
 sys.path.append('lib')
-from charms.layer.basic import activate_venv  # noqa: E402
-activate_venv()
+import charms
+charms.layer.basic.activate_venv()
 
 from charmhelpers.core import hookenv  # noqa: E402
 from jenkins import NotFoundException  # noqa: E402
@@ -118,3 +119,66 @@ def wait_result(jclient, job_name, build_number, secs_to_wait=60):
             print("Jenkins job {} not running yet".format(build_number))
         except:
             raise
+
+
+def get_s3_credentials(cred_name=None):
+    """Get S3 credentials from the juju credentials command.
+
+    if cred_name is set, get the credentials for the name.
+    if cred_name is not set, try to get the credentials for the default name.
+    if cred_name is not set, no default credential name and there is a single
+      credential name, get the credentials for that name.
+
+    Returns: access_key, secret_key
+    """
+    cmd = 'juju credentials aws --format yaml --show-secrets'.split()
+    try:
+        creds = subprocess.check_output(cmd)
+    except subprocess.CalledProcessError as e:
+        fail_action(
+            "Error running 'juju credentials' command: ".format(e.output))
+    creds = yaml.load(creds)
+    if not creds.get('credentials', {}).get('aws'):
+        fail_action('AWS credentials not found. Set AWS credentials by '
+                    'running "set-credentials" action.')
+    if not cred_name:
+        cred_name = creds.get('credentials', {}).get('aws', {}).get(
+            'default-credential')
+    if (not cred_name and
+            len(creds.get('credentials', {}).get('aws', {}).keys()) == 1):
+        cred_name = list(creds.get('credentials', {}).get('aws', {}).keys())[0]
+    if not cred_name:
+        fail_action('Credentials not found. Set AWS credentials by '
+                    'running "set-credentials" action.')
+    access_key = creds['credentials']['aws'][cred_name]['access-key']
+    secret_key = creds['credentials']['aws'][cred_name]['secret-key']
+    return access_key, secret_key
+
+
+def create_s3_config_file(filename, access_key, secret_key):
+    """Create S3 config file containing access and secret keys."""
+    with open(filename, 'w') as f:
+        f.write('[default]\n')
+        f.write('access_key = {}\n'.format(access_key))
+        f.write('secret_key = {}\n'.format(secret_key))
+
+
+def get_s3_options(s3_config_filename):
+    """Generate CWR options to store the test results to S3 storage."""
+    bucket = hookenv.action_get("bucket")
+    if not bucket:
+        return ''
+    results_dir = hookenv.action_get("results-dir")
+    if not results_dir:
+        fail_action('"results-dir" must be provided if "bucket" name is set.')
+    private = hookenv.action_get("private") or False
+    cred_name = hookenv.action_get("credential-name")
+    access_key, secret_key = get_s3_credentials(cred_name)
+    create_s3_config_file(s3_config_filename, access_key, secret_key)
+    private_opt = ""
+    if private:
+        private_opt = " --s3-private"
+    s3_opt = '--bucket {} --results-dir {} --s3-creds {}{}'.format(
+        bucket, results_dir, s3_config_filename, private_opt)
+    return s3_opt
+
