@@ -4,9 +4,10 @@ set -ex
 
 
 function add_exit_handler() {
-    # Prepend new handlers to the current set that will execute on exit.
+    # Prepend new handlers to the current set that will execute on exit. When
+    # printing old trap, only use 1 signal (else we'll see the handlers duped).
     handler="$1"
-    old_trap=`trap -p SIGHUP SIGINT SIGTERM | awk -F"'" '{print $2}'`
+    old_trap=`trap -p SIGTERM | awk -F"'" '{print $2}'`
 
     # We want *all* the handlers to fire, even if one fails (hence || true)
     trap "$handler || true ; $old_trap" SIGHUP SIGINT SIGTERM
