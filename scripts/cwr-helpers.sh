@@ -4,13 +4,12 @@ set -ex
 
 
 function add_exit_handler() {
-    # Prepend new handlers to the current set that execute on EXIT.
-    # EXIT fires when the shell stops, whether HUP, INT, or TERM.
+    # Prepend new handlers to the current set that will execute on exit.
     handler="$1"
-    old_trap=`trap -p EXIT | awk -F"'" '{print $2}'`
+    old_trap=`trap -p SIGHUP SIGINT SIGTERM | awk -F"'" '{print $2}'`
 
     # We want *all* the handlers to fire, even if one fails (hence || true)
-    trap "$handler || true ; $old_trap"
+    trap "$handler || true ; $old_trap" SIGHUP SIGINT SIGTERM
 }
 
 
