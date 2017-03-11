@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
 
+import sys
+
 from contextlib import contextmanager
 from tempfile import NamedTemporaryFile
 from shutil import rmtree
@@ -8,12 +10,16 @@ from textwrap import dedent
 from unittest import TestCase
 from unittest.mock import patch, Mock
 
-import charms
-charms.layer = Mock()
-with patch.object(charms, 'layer'):
-    from actions.cwrhelpers import get_s3_credentials
-    from actions.cwrhelpers import get_s3_options
-    from actions.cwrhelpers import create_s3_config_file
+# charms.layer.basic only exists in the built charm; mock it out before
+# the cwrhelpers imports since those depend on c.l.b.activate_venv.
+layer_mock = Mock()
+sys.modules['charms.layer'] = layer_mock
+sys.modules['charms.layer.basic'] = layer_mock
+sys.modules['charms.layer.basic.activate_venv'] = layer_mock
+
+from actions.cwrhelpers import get_s3_credentials      # noqa: E402
+from actions.cwrhelpers import get_s3_options          # noqa: E402
+from actions.cwrhelpers import create_s3_config_file   # noqa: E402
 
 
 class TestS3Credentials(TestCase):
