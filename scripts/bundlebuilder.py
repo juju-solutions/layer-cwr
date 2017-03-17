@@ -6,7 +6,7 @@ import hashlib
 from tempfile import mkdtemp
 from time import sleep
 from subprocess import Popen, PIPE, STDOUT
-from shutil import rmtree
+from shutil import rmtree, copytree
 from yaml import safe_load, dump
 from re import search
 
@@ -41,6 +41,61 @@ def execute(cmd, raise_exception=True):
             return p.returncode, output
 
 
+class Fetcher(object):
+    """
+    Fetcher supports different protocols/means to reach the bundle source.
+    """
+
+    @staticmethod
+    def fetch(repo, branch=None):
+        """
+        Based on the protocol described at the beginning of repo calls
+        the right fetch_* method.
+        Args:
+            repo: repository where the bundle resides
+            branch: if the repo is a git repo, this is the branch
+
+        Returns: a directory where the bundle is
+
+        """
+        if repo.startswith('local:'):
+            path = repo[len('local:'):]
+            return Fetcher.fetch_local(path)
+        else:
+            return Fetcher.fetch_git(repo, branch)
+
+    @staticmethod
+    def fetch_local(path):
+        """
+        Just copy the bundle to a temp location
+        Args:
+            path: the path to the bundle
+
+        Returns: the temp directory containing the bundle
+
+        """
+        tempdir = mkdtemp()
+        destination = "{}/bundle".format(tempdir)
+        copytree(path, destination)
+        return destination
+
+    @staticmethod
+    def fetch_git(repo, branch):
+        """
+        Clone the repository of the bundle
+        Args:
+            repo: the git repo repo with the bundle
+            branch: the branch with the bundle
+
+        Returns: the temp directory containing the bundle
+
+        """
+        tempdir = mkdtemp()
+        destination = "{}/bundle".format(tempdir)
+        execute(["git", "clone", repo, "--branch", branch, "--single-branch", destination])
+        return tempdir
+
+
 class Bundle(object):
 
     def __init__(self,
@@ -63,11 +118,10 @@ class Bundle(object):
             store_push_dry_run: perform a dry run on pushing to the store
             fake_output: path to a tarball with fake output
         """
-        self.tempdir = mkdtemp()
+        self.tempdir = Fetcher.fetch(repo, branch)
         self.subdir = subdir
         self.bundle_path = "{}/{}/bundle.yaml".format(self.tempdir, subdir)
         self.ci_info_path = "{}/{}/ci-info.yaml".format(self.tempdir, subdir)
-        execute(["git", "clone", repo, "--branch", branch, "{}/".format(self.tempdir)])
         with open(self.bundle_path, 'r+') as stream:
             self.bundle = safe_load(stream)
 
