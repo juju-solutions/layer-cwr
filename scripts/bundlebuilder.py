@@ -93,7 +93,7 @@ class Fetcher(object):
         tempdir = mkdtemp()
         destination = "{}/bundle".format(tempdir)
         execute(["git", "clone", repo, "--branch", branch, "--single-branch", destination])
-        return tempdir
+        return destination
 
 
 class Bundle(object):
