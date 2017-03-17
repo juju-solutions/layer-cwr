@@ -252,9 +252,7 @@ function release_charm() {
 
 
 function add_models() {
-    # Keep track of the controllers and models we want CWR to run
-    # If not specified, CWR will run on all registered controllers
-    controllers="${@:-$(cat /var/lib/jenkins/controller.names)}"
+    controllers="$@"
     MODELS_TO_TEST=""
     petname=$(petname)
 
@@ -292,7 +290,7 @@ function add_models() {
             # return model names that start with our prefix, adding a new
             # "$controller:" prefix so we can destroy models even if we're not
             # switched into the appropriate juju controller.
-            MODELS_TO_KILL+="$(juju models --format json | jq -r '.models[].name' | grep ^job-$BUILD_NUMBER- | sed -e s/^/${controller}:/) "
+            MODELS_TO_KILL+="$(juju models -c ${controller} --format json | jq -r '.models[].name' | grep ^job-$BUILD_NUMBER- | sed -e s/^/${controller}:/) "
         done
         for model in $MODELS_TO_KILL; do
             echo "Destroying model $model"
@@ -362,7 +360,9 @@ function run_cwr() {
 
 
 function run_cwr_in_container() {
-    controllers="$1"
+    # Keep track of the controllers we want CWR to run
+    # If not specified, CWR will run on all registered controllers
+    controllers="${1:-$(cat /var/lib/jenkins/controller.names)}"
     shift 1  # remove controllers, pass through other args
     job_title="$1"
     bundle_name="$2"
@@ -381,22 +381,24 @@ function run_cwr_in_container() {
 
     update_image
 
-    add_models $controllers
+    for controller in $controllers; do
+      add_models $controller
 
-    if [[ -n "$OUTPUT_SCENARIO" ]]
-    then
-         FAKE_FILES_TAR="/var/lib/jenkins/mock-results/$OUTPUT_SCENARIO.tar.gz";
-         tar -zxvf $FAKE_FILES_TAR -C $ARTIFACTS_DIR
+      if [[ -n "$OUTPUT_SCENARIO" ]]
+      then
+           FAKE_FILES_TAR="/var/lib/jenkins/mock-results/$OUTPUT_SCENARIO.tar.gz";
+           tar -zxvf $FAKE_FILES_TAR -C $ARTIFACTS_DIR
 
-         if [[ $OUTPUT_SCENARIO == pass* ]]
-         then
-             exit 0
-         else
-             exit 1
-         fi
-    else
-        run_in_container cwr-helpers.sh run_cwr "$MODELS_TO_TEST" "$@"
-    fi
+           if [[ $OUTPUT_SCENARIO == pass* ]]
+           then
+               exit 0
+           else
+               exit 1
+           fi
+      else
+          run_in_container cwr-helpers.sh run_cwr "$MODELS_TO_TEST" "$@"
+      fi
+    done
 }
 
 
