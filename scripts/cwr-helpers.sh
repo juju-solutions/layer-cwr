@@ -381,6 +381,17 @@ function run_cwr_in_container() {
 
     update_image
 
+    # NB: This really stinks. We're running clouds sequentially intead of
+    # parallellelly because of this issue:
+    #   https://github.com/juju-solutions/layer-cwr/issues/114
+    #
+    # Hopefully we can axe this loop once cwr/bt handle multiple models better.
+    # Until then, remove the set -e around the loop because we want to process
+    # all clouds even if one fails. Note we *could* background the run_cwr
+    # bits to spawn parallel cwr tasks, but that interleaves the logs and
+    # makes it almost impossible to debug jenkins console output.
+    # Be patient instead :(
+    set +e
     for controller in $controllers; do
       add_models $controller
 
@@ -399,6 +410,7 @@ function run_cwr_in_container() {
           run_in_container cwr-helpers.sh run_cwr "$MODELS_TO_TEST" "$@"
       fi
     done
+    set -e
 }
 
 
