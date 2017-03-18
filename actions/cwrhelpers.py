@@ -131,7 +131,8 @@ def get_s3_credentials(cred_name=None):
 
     Returns: access_key, secret_key
     """
-    cmd = 'juju credentials aws --format yaml --show-secrets'.split()
+    cmd = ('sudo -H -u jenkins -- juju credentials aws --format yaml '
+           '--show-secrets'.split())
     try:
         creds = subprocess.check_output(cmd)
     except subprocess.CalledProcessError as e:

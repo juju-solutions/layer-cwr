@@ -75,8 +75,8 @@ class TestS3Credentials(TestCase):
         self.assertEqual(access, 'foo')
         self.assertEqual(secret, 'bar')
         co_mock.assert_called_once_with(
-            ['juju', 'credentials', 'aws', '--format', 'yaml',
-             '--show-secrets'])
+            ['sudo', '-H', '-u', 'jenkins', '--', 'juju', 'credentials', 'aws',
+             '--format', 'yaml', '--show-secrets'])
 
     def test_get_s3_credentials_default_credential(self):
         with patch('subprocess.check_output', autospec=True,
@@ -85,8 +85,8 @@ class TestS3Credentials(TestCase):
         self.assertEqual(access, 'foo-2')
         self.assertEqual(secret, 'bar-2')
         co_mock.assert_called_once_with(
-            ['juju', 'credentials', 'aws', '--format', 'yaml',
-             '--show-secrets'])
+            ['sudo', '-H', '-u', 'jenkins', '--', 'juju', 'credentials', 'aws',
+             '--format', 'yaml', '--show-secrets'])
 
     def test_get_s3_credentials_single_credential(self):
         with patch('subprocess.check_output', autospec=True,
@@ -95,8 +95,8 @@ class TestS3Credentials(TestCase):
         self.assertEqual(access, 'foo')
         self.assertEqual(secret, 'bar')
         co_mock.assert_called_once_with(
-            ['juju', 'credentials', 'aws', '--format', 'yaml',
-             '--show-secrets'])
+            ['sudo', '-H', '-u', 'jenkins', '--', 'juju', 'credentials', 'aws',
+             '--format', 'yaml', '--show-secrets'])
 
     def test_get_s3_credentials_empty(self):
         with patch('subprocess.check_output', autospec=True,
@@ -106,8 +106,8 @@ class TestS3Credentials(TestCase):
                 with self.assertRaises(SystemExit):
                     get_s3_credentials()
         co_mock.assert_called_once_with(
-            ['juju', 'credentials', 'aws', '--format', 'yaml',
-             '--show-secrets'])
+            ['sudo', '-H', '-u', 'jenkins', '--', 'juju', 'credentials', 'aws',
+             '--format', 'yaml', '--show-secrets'])
         fa_mock.assert_called_once_with(
             'AWS credentials not found. Set AWS credentials by running '
             '"set-credentials" action.')
@@ -120,8 +120,8 @@ class TestS3Credentials(TestCase):
                 with self.assertRaises(SystemExit):
                     get_s3_credentials()
         co_mock.assert_called_once_with(
-            ['juju', 'credentials', 'aws', '--format', 'yaml',
-             '--show-secrets'])
+            ['sudo', '-H', '-u', 'jenkins', '--', 'juju', 'credentials', 'aws',
+             '--format', 'yaml', '--show-secrets'])
         fa_mock.assert_called_once_with(
             'AWS credentials not found. Set AWS credentials by running '
             '"set-credentials" action.')
@@ -134,8 +134,8 @@ class TestS3Credentials(TestCase):
                 with self.assertRaises(SystemExit):
                     get_s3_credentials()
         co_mock.assert_called_once_with(
-            ['juju', 'credentials', 'aws', '--format', 'yaml',
-             '--show-secrets'])
+            ['sudo', '-H', '-u', 'jenkins', '--', 'juju', 'credentials', 'aws',
+             '--format', 'yaml', '--show-secrets'])
         fa_mock.assert_called_once_with(
             'Credentials not found. Set AWS credentials by running '
             '"set-credentials" action.')
@@ -168,8 +168,8 @@ class TestGetS3Options(TestCase):
             '--bucket bucket-foo --results-dir results-dir-foo --s3-creds '
             '{} --s3-private'.format(s3_config.name))
         co_mock.assert_called_once_with(
-            ['juju', 'credentials', 'aws', '--format', 'yaml',
-             '--show-secrets'])
+            ['sudo', '-H', '-u', 'jenkins', '--', 'juju', 'credentials', 'aws',
+             '--format', 'yaml', '--show-secrets'])
 
     def test_get_s3_options_public(self):
         with patch('actions.cwrhelpers.hookenv', autospec=True) as ch_mock:
@@ -184,8 +184,8 @@ class TestGetS3Options(TestCase):
             '--bucket bucket-foo --results-dir results-dir-foo --s3-creds '
             '{}'.format(s3_config.name))
         co_mock.assert_called_once_with(
-            ['juju', 'credentials', 'aws', '--format', 'yaml',
-             '--show-secrets'])
+            ['sudo', '-H', '-u', 'jenkins', '--', 'juju', 'credentials', 'aws',
+             '--format', 'yaml', '--show-secrets'])
 
     def test_get_s3_options_no_bucket(self):
         with patch('actions.cwrhelpers.hookenv', autospec=True) as ch_mock:
