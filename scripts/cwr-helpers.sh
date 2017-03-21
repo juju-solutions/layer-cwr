@@ -109,6 +109,10 @@ function run_in_container() {
     # Copy in Juju config (instead of mounting to isolate active model) and helper scripts
     lxc file push -r ~/.local/share/juju $container/root/.local/share/
     lxc file push -r /var/lib/jenkins/scripts/ $container/usr/local/bin/
+    if [ -d "/var/lib/jenkins/configuration" ]; then
+        lxc file push -r /var/lib/jenkins/configuration/ $container/root/configuration/
+    fi
+
 
     # Mount the workspace and artifacts dir
     lxc config device add $container workspace disk source=$(pwd) path=/root/workspace
@@ -331,6 +335,11 @@ function run_cwr() {
         bundle_file="bundle.yaml"
     fi
 
+    output_option='--results-dir /srv/artifacts'
+    if [[ -n "${s3_option}" ]]; then
+        output_option=$s3_option
+    fi
+
     rm -f totest.yaml
     echo "bundle: $bundle" >> totest.yaml
     echo "bundle_name: $job_title" >> totest.yaml
@@ -339,7 +348,7 @@ function run_cwr() {
     artifacts_dir=$(job_output_dir "$job_title")
     if ! env MATRIX_MODEL_PREFIX="job-$BUILD_NUMBER-matrix" \
       MATRIX_OUTPUT_DIR=$artifacts_dir cwr -F -l DEBUG -v $models totest.yaml \
-      --results-dir /srv/artifacts --test-id $BUILD_NUMBER
+      $output_option --test-id $BUILD_NUMBER
     then
         echo 'CWR reported failure'
         if [[ -n $PR_ID && -n $TOKEN ]]; then

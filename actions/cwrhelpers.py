@@ -1,5 +1,8 @@
 #!/usr/bin/env python3
 
+import errno
+import os
+import shutil
 import subprocess
 import sys
 import time
@@ -14,6 +17,12 @@ from jenkins import NotFoundException  # noqa: E402
 from theblues.charmstore import CharmStore  # noqa: E402
 from theblues.errors import EntityNotFound, ServerError  # noqa: E402
 from utils import get_fname  # noqa: E402
+
+
+# if you update this path, make sure to update the same path in cwr-helpers.sh
+HOME = "/var/lib/jenkins"
+CONFIG_DIR = 'configuration'
+CONTAINER_HOME = "/root"
 
 
 class InvalidBundle(Exception):
@@ -158,13 +167,24 @@ def get_s3_credentials(cred_name=None):
 
 def create_s3_config_file(filename, access_key, secret_key):
     """Create S3 config file containing access and secret keys."""
+    ensure_dir(os.path.dirname(filename))
     with open(filename, 'w') as f:
         f.write('[default]\n')
         f.write('access_key = {}\n'.format(access_key))
         f.write('secret_key = {}\n'.format(secret_key))
+    shutil.chown(filename, 'jenkins', 'jenkins')
 
 
-def get_s3_options(s3_config_filename):
+def ensure_dir(dirpath):
+    """Creates directories for dir path if they don't already exist."""
+    try:
+        os.makedirs(dirpath)
+    except OSError as e:
+        if e.errno != errno.EEXIST:
+            raise
+
+
+def get_s3_options(s3_config_filepath, s3_container_filepath):
     """Generate CWR options to store the test results to S3 storage."""
     bucket = hookenv.action_get("bucket")
     if not bucket:
@@ -175,10 +195,10 @@ def get_s3_options(s3_config_filename):
     private = hookenv.action_get("private") or False
     cred_name = hookenv.action_get("credential-name")
     access_key, secret_key = get_s3_credentials(cred_name)
-    create_s3_config_file(s3_config_filename, access_key, secret_key)
+    create_s3_config_file(s3_config_filepath, access_key, secret_key)
     private_opt = ""
     if private:
         private_opt = " --s3-private"
     s3_opt = '--bucket {} --results-dir {} --s3-creds {}{}'.format(
-        bucket, results_dir, s3_config_filename, private_opt)
+        bucket, results_dir, s3_container_filepath, private_opt)
     return s3_opt
