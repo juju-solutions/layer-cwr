@@ -145,7 +145,7 @@ class TestGetS3Options(TestCase):
 
     def test_create_s3_config_file(self):
         with NamedTemporaryFile() as s3_config:
-            with patch('shutil.chown', autospec=True) as chown_mock:
+            with patch('shutil.chown', autospec=True) as sc_mock:
                 create_s3_config_file(s3_config.name, 'foo', 'bar')
             with open(s3_config.name) as f:
                 creds = f.read()
@@ -155,6 +155,7 @@ class TestGetS3Options(TestCase):
         secret_key = bar
         """)
         self.assertEqual(creds, expected_output)
+        sc_mock.assert_called_once_with(s3_config.name, 'jenkins', 'jenkins')
 
     def test_get_s3_options(self):
         with patch('actions.cwrhelpers.hookenv', autospec=True) as ch_mock:
