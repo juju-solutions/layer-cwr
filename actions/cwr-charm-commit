@@ -33,9 +33,6 @@ from utils import (
 )  # noqa: E402
 
 
-
-
-
 def add_job():
     '''
     Adds a job to be triggered upon a commit on github
