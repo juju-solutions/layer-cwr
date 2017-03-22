@@ -145,7 +145,8 @@ class TestGetS3Options(TestCase):
 
     def test_create_s3_config_file(self):
         with NamedTemporaryFile() as s3_config:
-            create_s3_config_file(s3_config.name, 'foo', 'bar')
+            with patch('shutil.chown', autospec=True) as sc_mock:
+                create_s3_config_file(s3_config.name, 'foo', 'bar')
             with open(s3_config.name) as f:
                 creds = f.read()
         expected_output = dedent("""\
@@ -154,6 +155,7 @@ class TestGetS3Options(TestCase):
         secret_key = bar
         """)
         self.assertEqual(creds, expected_output)
+        sc_mock.assert_called_once_with(s3_config.name, 'jenkins', 'jenkins')
 
     def test_get_s3_options(self):
         with patch('actions.cwrhelpers.hookenv', autospec=True) as ch_mock:
@@ -162,14 +164,16 @@ class TestGetS3Options(TestCase):
                        return_value=TestS3Credentials.fake_creds
                        ) as co_mock:
                 with NamedTemporaryFile() as s3_config:
-                    s3_option = get_s3_options(s3_config.name)
+                    with patch('shutil.chown', autospec=True) as sc_mock:
+                        s3_option = get_s3_options(s3_config.name, '/foo')
         self.assertEqual(
             s3_option,
-            '--bucket bucket-foo --results-dir results-dir-foo --s3-creds '
-            '{} --s3-private'.format(s3_config.name))
+            '--bucket bucket-foo --results-dir results-dir-foo --s3-creds /foo'
+            ' --s3-private')
         co_mock.assert_called_once_with(
             ['sudo', '-H', '-u', 'jenkins', '--', 'juju', 'credentials', 'aws',
              '--format', 'yaml', '--show-secrets'])
+        sc_mock.assert_called_once_with(s3_config.name, 'jenkins', 'jenkins')
 
     def test_get_s3_options_public(self):
         with patch('actions.cwrhelpers.hookenv', autospec=True) as ch_mock:
@@ -178,19 +182,21 @@ class TestGetS3Options(TestCase):
                        return_value=TestS3Credentials.fake_creds
                        )as co_mock:
                 with NamedTemporaryFile() as s3_config:
-                    s3_option = get_s3_options(s3_config.name)
+                    with patch('shutil.chown', autospec=True) as sc_mock:
+                        s3_option = get_s3_options(s3_config.name, '/foo')
         self.assertEqual(
             s3_option,
-            '--bucket bucket-foo --results-dir results-dir-foo --s3-creds '
-            '{}'.format(s3_config.name))
+            '--bucket bucket-foo --results-dir results-dir-foo --s3-creds /foo'
+            )
         co_mock.assert_called_once_with(
             ['sudo', '-H', '-u', 'jenkins', '--', 'juju', 'credentials', 'aws',
              '--format', 'yaml', '--show-secrets'])
+        sc_mock.assert_called_once_with(s3_config.name, 'jenkins', 'jenkins')
 
     def test_get_s3_options_no_bucket(self):
         with patch('actions.cwrhelpers.hookenv', autospec=True) as ch_mock:
             ch_mock.action_get.return_value = ''
-            s3_option = get_s3_options(None)
+            s3_option = get_s3_options(None, None)
         self.assertEqual(s3_option, '')
 
 
