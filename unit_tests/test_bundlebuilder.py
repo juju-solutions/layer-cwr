@@ -76,5 +76,6 @@ class TestBundlebuilder(unittest.TestCase):
         )
         self.assertEqual(args, expected_args)
 
+
 if __name__ == "__main__":
     unittest.main()
