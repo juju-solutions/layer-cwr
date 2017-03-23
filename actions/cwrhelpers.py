@@ -202,3 +202,10 @@ def get_s3_options(s3_config_filepath, s3_container_filepath):
     s3_opt = '--bucket {} --results-dir {} --s3-creds {}{}'.format(
         bucket, results_dir, s3_container_filepath, private_opt)
     return s3_opt
+
+
+def get_s3_creds_filenames(job_name):
+    s3_creds = "{}.s3cfg".format(os.path.join(HOME, CONFIG_DIR, job_name))
+    s3_creds_container = os.path.join(
+        CONTAINER_HOME, CONFIG_DIR, os.path.basename(s3_creds))
+    return s3_creds, s3_creds_container

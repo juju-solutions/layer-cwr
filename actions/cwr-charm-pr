@@ -42,6 +42,9 @@ def add_job():
                                'and none was provided to action')
 
     job_name = "cwr_charm_pr_{}_in_{}".format(charm_fname, bundle_fname)
+    s3_creds, s3_creds_container = cwrhelpers.get_s3_creds_filenames(job_name)
+    s3_options = cwrhelpers.get_s3_options(s3_creds, s3_creds_container)
+
     job_contents = templating.render(
         source="BuildMyPR/config.xml",
         target=None,
@@ -59,6 +62,7 @@ def add_job():
             "job_name": job_name,
             "output_scenarios": get_output_scenarios(),
             "oauth": hookenv.action_get("oauth-token"),
+            "s3_options": s3_options,
         })
     try:
         jclient.create_job(job_name, job_contents)

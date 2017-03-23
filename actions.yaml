@@ -21,6 +21,27 @@ cwr-bundle:
                 Subdirectory in the repo where the bundle lives,
                 if not at the top-level.
             default: "."
+        bucket:
+            description: |
+                S3 bucket name. If this is set, it enables storing the test
+                results to S3.
+            type: string
+            default: ""
+        results-dir:
+            description: S3 directory where to store the test results.
+            type: string
+            default: ""
+        private:
+            description: Do not make the files written to S3 public-read.
+            type: boolean
+            default: false
+        credential-name:
+            description: |
+                AWS credential name to use for accessing the S3 storage. It
+                will auto discover credential name if you have a single
+                AWS credential.
+            type: string
+            default: ""
 
     required: ['bundle-name', 'repo']
 cwr-charm-commit:
@@ -137,6 +158,27 @@ cwr-charm-pr:
         oauth-token:
             description: OAuth token used to comment on the PR.
             type: string
+        bucket:
+            description: |
+                S3 bucket name. If this is set, it enables storing the test
+                results to S3.
+            type: string
+            default: ""
+        results-dir:
+            description: S3 directory where to store the test results.
+            type: string
+            default: ""
+        private:
+            description: Do not make the files written to S3 public-read.
+            type: boolean
+            default: false
+        credential-name:
+            description: |
+                AWS credential name to use for accessing the S3 storage. It
+                will auto discover credential name if you have a single
+                AWS credential.
+            type: string
+            default: ""
     required: ['charm-name', 'repo']
 cwr-charm-release:
     description: |
@@ -184,6 +226,27 @@ cwr-charm-release:
             description: Set this to 'wehooks' or 'poll'.
             default: "webhooks"
             type: string
+        bucket:
+            description: |
+                S3 bucket name. If this is set, it enables storing the test
+                results to S3.
+            type: string
+            default: ""
+        results-dir:
+            description: S3 directory where to store the test results.
+            type: string
+            default: ""
+        private:
+            description: Do not make the files written to S3 public-read.
+            type: boolean
+            default: false
+        credential-name:
+            description: |
+                AWS credential name to use for accessing the S3 storage. It
+                will auto discover credential name if you have a single
+                AWS credential.
+            type: string
+            default: ""
     required: ['charm-name', 'repo']
 store-login:
     description: Initialise session with the Juju store.

@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 
+import argparse
 import sys
 import os
 import hashlib
@@ -291,11 +292,11 @@ class Bundle(object):
 
         """
         if self.fake_output == "":
-            cmd = self.CWR_command + [
-                ' '.join(controllers),
-                os.environ['JOB_NAME'],
-                "{}/{}".format(self.tempdir, self.subdir),
-            ]
+            cmd = (self.CWR_command + [
+                       ' '.join(controllers),
+                       os.environ['JOB_NAME'],
+                       "{}/{}".format(self.tempdir, self.subdir),
+                   ])
             execute(cmd)
         else:
             output_dir = "/srv/artifacts/{}/{}/".format(os.environ['JOB_NAME'],
@@ -519,30 +520,45 @@ class Coordinator(object):
                                          upgrade_info['to-channel'])
 
 
+def parse_args(argv=None):
+    parser = argparse.ArgumentParser()
+    subparsers = parser.add_subparsers(
+        dest='operation', help='Check or build bundle')
+
+    ch_parser = subparsers.add_parser('check', help='Check bundle.')
+    ch_parser.add_argument('repo', help='Repo of the bundle.')
+    ch_parser.add_argument('branch', help='Branch to grap the bundle from.')
+    ch_parser.add_argument(
+        'subdir',
+        help='Subdirectory within the repo where the bundle is')
+
+    bl_parser = subparsers.add_parser('build', help='Check the bundle.')
+    bl_parser.add_argument('repo', help='Repo of the bundle.')
+    bl_parser.add_argument('branch', help='Branch to grab the bundle from.')
+    bl_parser.add_argument(
+        'subdir', help='Subdirectory within the repo where the bundle is')
+    bl_parser.add_argument('build_num', help='Build number.')
+    bl_parser.add_argument(
+        'models', nargs='+',
+        help="Models to be used for testing. Needed only for 'build' "
+             "operation.")
+    args = parser.parse_args(argv)
+    return args
+
+
 if __name__ == "__main__":
-    if "--help" in sys.argv or len(sys.argv) == 1:
-        # TODO(kjackal): make these non positional params
-        print("Usage: {} <operation> <repo> <branch> <model>\n".format(sys.argv[0]))
-        print("  <operation>: 'check' or 'build' to check or build the bundle.")
-        print("  <repo>: repo of the bundle.")
-        print("  <bundle_subdir>: subdirectory within the repo where the bundle is. "
-              "Use . for no subdir.")
-        print("  <branch>: branch to grab the bundle from.")
-        print("  <build_id>: id of the build.")
-        print("  <list of models>: models to be used for testing. Needed only for 'build' operation.")
-        sys.exit(1)
-    operation = sys.argv[1]
-    repo = sys.argv[2]
-    branch = sys.argv[3]
-    subdir = sys.argv[4]
+    args = parse_args()
     tester = Coordinator()
-    if operation == "check":
-        if tester.check_bundle(repo, branch, subdir):
+    if args.operation == "check":
+        if tester.check_bundle(args.repo, args.branch, args.subdir):
             sys.exit(0)
         else:
             sys.exit(1)
-    else:
+    elif args.operation == "build":
         build_num = sys.argv[5]
         models = sys.argv[6:]
-        tester.test_and_release_bundle(repo, branch, subdir, build_num, models)
+        tester.test_and_release_bundle(
+            args.repo, args.branch, args.subdir, args.build_num, args.models)
         sys.exit(0)
+    else:
+        raise ValueError("Unknown command.")
