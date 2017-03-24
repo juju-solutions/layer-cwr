@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 
+import argparse
 import os
 import unittest
 from scripts import bundlebuilder
@@ -16,15 +17,15 @@ class TestBundlebuilder(unittest.TestCase):
 
     def test_raise(self):
         with self.assertRaises(Exception):
-            retcode, output = bundlebuilder.execute(
-                ["python3", "scripts/bundlebuilder.py", "--help"])
+            bundlebuilder.execute(
+                ["python3", "scripts/bundlebuilder.py", "foo"])
 
     def test_help(self):
         retcode, output = bundlebuilder.execute(
-            ["python3", "scripts/bundlebuilder.py", "--help"],
+            ["python3", "scripts/bundlebuilder.py", "foo"],
             raise_exception=False)
-        assert retcode is 1
-        assert "Usage:" in output
+        assert retcode is 2
+        assert "invalid choice:" in output
 
     @patch('scripts.bundlebuilder.execute')
     def test_bundle(self, execute_mock):
@@ -49,6 +50,31 @@ class TestBundlebuilder(unittest.TestCase):
         charm.release_latest("edge", "beta")
         print(execute_mock.call_count)
         assert execute_mock.call_count is 4
+
+    def test_parse_args_check(self):
+        args = bundlebuilder.parse_args(
+            ['check', 'github.com/foo', 'master', '.'])
+        expected_args = argparse.Namespace(
+            operation='check',
+            repo='github.com/foo',
+            branch='master',
+            subdir='.',
+        )
+        self.assertEqual(args, expected_args)
+
+    def test_parse_args_build(self):
+        args = bundlebuilder.parse_args(
+            ['build', 'github.com/foo', 'master', '.', '1', 'model1',
+             'model2'])
+        expected_args = argparse.Namespace(
+            operation='build',
+            repo='github.com/foo',
+            branch='master',
+            subdir='.',
+            build_num='1',
+            models=['model1', 'model2']
+        )
+        self.assertEqual(args, expected_args)
 
 
 if __name__ == "__main__":

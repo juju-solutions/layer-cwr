@@ -61,6 +61,9 @@ def add_job():
                                '"webhooks" or "poll"')
 
     job_name = "cwr_charm_release_{}_in_{}".format(charm_fname, bundle_fname)
+    s3_creds, s3_creds_container = cwrhelpers.get_s3_creds_filenames(job_name)
+    s3_options = cwrhelpers.get_s3_options(s3_creds, s3_creds_container)
+
     job_contents = templating.render(
         source="BuildMyCharm/config.xml",
         target=None,
@@ -81,6 +84,7 @@ def add_job():
             "skip_builds": skip_builds,
             "job_name": job_name,
             "output_scenarios": get_output_scenarios(),
+            "s3_options": s3_options,
         })
     try:
         jclient.create_job(job_name, job_contents)

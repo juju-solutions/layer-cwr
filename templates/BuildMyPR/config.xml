@@ -75,7 +75,8 @@ run_cwr_in_container "{{controller}}" "{{job_name}}"\
                      "{{charm_name}}" "{{series}}" \
                      "{{app_name_in_bundle}}" \
                      "{{charm_subdir}}" \
-                     "{{pushtochannel}}" "{{lp_id}}"
+                     "{{pushtochannel}}" "{{lp_id}}" \
+                     "{{s3_options}}"
       </command>
     </hudson.tasks.Shell>
   </builders>

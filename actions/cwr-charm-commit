@@ -66,9 +66,7 @@ def add_job():
                                "'webhooks' or 'poll'")
 
     job_name = "cwr_charm_commit_{}_in_{}".format(charm_fname, bundle_fname)
-
-    s3_creds = "{}.s3cfg".format(join(HOME, CONFIG_DIR, job_name))
-    s3_creds_container = join(CONTAINER_HOME, CONFIG_DIR, basename(s3_creds))
+    s3_creds, s3_creds_container = cwrhelpers.get_s3_creds_filenames(job_name)
     s3_options = get_s3_options(s3_creds, s3_creds_container)
 
     job_contents = templating.render(

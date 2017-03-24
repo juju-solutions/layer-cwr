@@ -153,6 +153,7 @@ function run_in_container() {
                         --env=TOKEN="$TOKEN" \
                         --env=REPO="$REPO" \
                         --env=PR_ID="$PR_ID" \
+                        --env=S3_OPTIONS_ENV="$S3_OPTIONS_ENV" \
                         -- "$@"
 }
 
@@ -321,7 +322,7 @@ function run_cwr() {
     charm_subdir="$7"
     push_to_channel="$8"
     lp_id="$9"
-    s3_option="${10}"
+    s3_options="${10}"
     charm_build_dir="/tmp/${series:-builds}/$charm_name"
 
     if [[ -n "$charm_name" ]]; then
@@ -336,8 +337,10 @@ function run_cwr() {
     fi
 
     output_option='--results-dir /srv/artifacts'
-    if [[ -n "${s3_option}" ]]; then
-        output_option=$s3_option
+    if [[ -n "${s3_options}" ]]; then
+        output_option=$s3_options
+    elif [[ -n "${S3_OPTIONS_ENV}" ]]; then
+        output_option=$S3_OPTIONS_ENV
     fi
 
     rm -f totest.yaml

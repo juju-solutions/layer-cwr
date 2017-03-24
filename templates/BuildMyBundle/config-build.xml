@@ -39,6 +39,8 @@ python3 -u ~/scripts/bundlebuilder.py check {{repo}} {{branch}} {{bundle_subdir}
   <builders>
     <hudson.tasks.Shell>
       <command>#!/bin/bash
+set -ex
+export S3_OPTIONS_ENV="{{s3_options}}"
 python3 -u ~/scripts/bundlebuilder.py build {{repo}} {{branch}} {{bundle_subdir}} $BUILD_NUMBER "{{controller}}"
 </command>
     </hudson.tasks.Shell>
