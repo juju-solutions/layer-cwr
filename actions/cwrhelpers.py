@@ -12,11 +12,22 @@ sys.path.append('lib')
 from charms.layer.basic import activate_venv  # noqa: E402
 activate_venv()
 
+from jenkins import Jenkins, JenkinsException  # noqa: E402
+
 from charmhelpers.core import hookenv  # noqa: E402
+from charmhelpers.core import templating  # noqa: E402
+from charms.reactive import RelationBase  # noqa: E402
 from jenkins import NotFoundException  # noqa: E402
 from theblues.charmstore import CharmStore  # noqa: E402
 from theblues.errors import EntityNotFound, ServerError  # noqa: E402
-from utils import get_fname  # noqa: E402
+from utils import (
+    get_badge_path,
+    get_hook_token,
+    get_fname,
+    get_output_scenarios,
+    get_rest_path,
+    REST_PORT,
+)  # noqa: E402
 
 
 # if you update this path, make sure to update the same path in cwr-helpers.sh
@@ -74,7 +85,7 @@ def get_charm_names():
     return charm_name, charm_fname
 
 
-def get_reference_bundle():
+def _get_reference_bundle():
     # If we have a reference bundle, determine the app name used for our charm
     charm_name = hookenv.action_get("charm-name")
     if hookenv.action_get("reference-bundle"):
@@ -99,6 +110,17 @@ def get_reference_bundle():
         return bundle_name, bundle_fname, bundle_app_name
     else:
         return "", "", ""
+
+
+def get_reference_bundle():
+    try:
+        bundle_name, bundle_fname, bundle_app_name = _get_reference_bundle()
+    except InvalidBundle as e:
+        fail_action(str(e), e.reason)
+    if not bundle_name:
+        fail_action('Charm does not provide reference bundle and none was '
+                    'provided to action')
+    return bundle_name, bundle_fname, bundle_app_name
 
 
 def fail_action(msg, output=None):
@@ -209,3 +231,63 @@ def get_s3_creds_filenames(job_name):
     s3_creds_container = os.path.join(
         CONTAINER_HOME, CONFIG_DIR, os.path.basename(s3_creds))
     return s3_creds, s3_creds_container
+
+
+def make_jenkins_client():
+    jenkins_relation = (RelationBase.from_state('jenkins.available'))
+    jenkins_connection_info = jenkins_relation.get_connection_info()
+    return Jenkins(jenkins_connection_info["jenkins_url"],
+                   jenkins_connection_info["admin_username"],
+                   jenkins_connection_info["admin_password"])
+
+
+def get_common_context(job_name, charm_name, bundle_name, app_name_in_bundle):
+    """Return dict containing the values to be replaced in the template."""
+    s3_creds, s3_creds_container = get_s3_creds_filenames(job_name)
+    s3_options = get_s3_options(s3_creds, s3_creds_container)
+    context = {
+        "gitrepo": hookenv.action_get("repo"),
+        "charm_subdir": hookenv.action_get("charm-subdir"),
+        "pushtochannel": hookenv.action_get("push-to-channel") or "",
+        "lp_id": hookenv.action_get("namespace"),
+        "charm_name": charm_name,
+        "bundle_name": bundle_name,
+        "app_name_in_bundle": app_name_in_bundle,
+        "series": hookenv.action_get("series") or "",
+        "controller": hookenv.action_get("controller") or "",
+        "job_name": job_name,
+        "output_scenarios": get_output_scenarios(),
+        "s3_options": s3_options,
+    }
+    return context
+
+
+def create_jenkins_job(jenkins_client, source, context, job_name, target=None):
+    """Create Jenkins job and return hook token.
+
+    Args:
+        jenkins_client: Jenkins client
+        source: Source template
+        context: dict containing the values to be replaced in the template.
+        job_name:  Jenkins job name
+        target: Target file path. If none, no file will be written.
+
+    Returns:
+        Hook token.
+    """
+    job_contents = templating.render(
+        source=source, target=target, context=context)
+    try:
+        jenkins_client.create_job(job_name, job_contents)
+    except JenkinsException as e:
+        fail_action(str(e))
+    token = get_hook_token(job_name)
+    return token
+
+
+def get_info_urls(trigger_path, token, job_name):
+    url = "http://<cwr-ip>:{}{}/{}/{}/{}".format(
+        REST_PORT, get_rest_path(), trigger_path, job_name, token)
+    badge_url = "http://<cwr-ip>:{}{}".format(
+        REST_PORT, get_badge_path(job_name))
+    return url, badge_url

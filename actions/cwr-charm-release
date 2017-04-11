@@ -8,42 +8,20 @@ from charms.layer.basic import activate_venv  # noqa: E402
 activate_venv()
 
 from charmhelpers.core import hookenv  # noqa: E402
-from charms.reactive import RelationBase  # noqa: E402
-from charmhelpers.core import templating  # noqa: E402
 import cwrhelpers  # noqa: E402
-from jenkins import Jenkins, JenkinsException  # noqa: E402
 from utils import (
     trigger_jenkins_job,
-    get_hook_token,
-    get_rest_path,
-    get_badge_path,
-    get_output_scenarios,
-    REST_PORT,
     TRIGGER_PERIODICALLY,
     REFSPEC
 )  # noqa: E402
 
 
 def add_job():
-    '''
-    Adds a job to be triggered when a release on github is marked
-
-    '''
-    jenkins_relation = (RelationBase.from_state('jenkins.available'))
-    jenkins_connection_info = jenkins_relation.get_connection_info()
-    jclient = Jenkins(jenkins_connection_info["jenkins_url"],
-                      jenkins_connection_info["admin_username"],
-                      jenkins_connection_info["admin_password"])
-
+    """Adds a job to be triggered when a release on github is marked."""
+    jclient = cwrhelpers.make_jenkins_client()
     charm_name, charm_fname = cwrhelpers.get_charm_names()
-    try:
-        bundle_name, bundle_fname, bundle_app_name = cwrhelpers\
-                .get_reference_bundle()
-    except cwrhelpers.InvalidBundle as e:
-        cwrhelpers.fail_action(str(e), e.reason)
-    if not bundle_name:
-        cwrhelpers.fail_action('Charm does not provide reference bundle '
-                               'and none was provided to action')
+    bundle_name, bundle_fname, bundle_app_name = (cwrhelpers.
+                                                  get_reference_bundle())
 
     repo_access = hookenv.action_get("repo-access")
     if repo_access == 'webhooks':
@@ -57,54 +35,28 @@ def add_job():
         refspec = REFSPEC
         branch = "*/tags/*"
     else:
-        cwrhelpers.fail_action('The repo-access can only be '
-                               '"webhooks" or "poll"')
+        cwrhelpers.fail_action(
+            'The repo-access can only be "webhooks" or "poll"')
 
     job_name = "cwr_charm_release_{}_in_{}".format(charm_fname, bundle_fname)
-    s3_creds, s3_creds_container = cwrhelpers.get_s3_creds_filenames(job_name)
-    s3_options = cwrhelpers.get_s3_options(s3_creds, s3_creds_container)
+    context = cwrhelpers.get_common_context(
+        job_name, charm_name, bundle_name, bundle_app_name)
+    context['branch'] = branch
+    context['refspec'] = refspec
+    context['charm_home'] = getcwd()
+    context['trigger'] = trigger
+    context['skip_builds'] = skip_builds
+    token = cwrhelpers.create_jenkins_job(
+        jenkins_client=jclient, source='BuildMyCharm/config.xml',
+        context=context, job_name=job_name)
 
-    job_contents = templating.render(
-        source="BuildMyCharm/config.xml",
-        target=None,
-        context={
-            "gitrepo": hookenv.action_get("repo"),
-            "charm_subdir": hookenv.action_get("charm-subdir"),
-            "pushtochannel": hookenv.action_get("push-to-channel") or "",
-            "lp_id": hookenv.action_get("namespace"),
-            "branch": branch,
-            "charm_name": charm_name,
-            "bundle_name": bundle_name,
-            "app_name_in_bundle": bundle_app_name,
-            "refspec": refspec,
-            "series": hookenv.action_get("series") or "",
-            "controller": hookenv.action_get("controller") or "",
-            "charm_home": getcwd(),
-            "trigger": trigger,
-            "skip_builds": skip_builds,
-            "job_name": job_name,
-            "output_scenarios": get_output_scenarios(),
-            "s3_options": s3_options,
-        })
-    try:
-        jclient.create_job(job_name, job_contents)
-    except JenkinsException as e:
-        cwrhelpers.fail_action(str(e))
-
-    token = get_hook_token(job_name)
-    url = "http://<cwr-ip>:{}{}/trigger/{}/{}".format(
-        REST_PORT, get_rest_path(), job_name, token)
-
-    badge_url = "http://<cwr-ip>:{}{}".format(
-        REST_PORT, get_badge_path(job_name))
-
+    url, badge_url = cwrhelpers.get_info_urls('trigger', token, job_name)
     # Need to trigger the job for the first time in case of poll
     # or return the webhook
     if repo_access == 'poll':
         trigger_jenkins_job(jclient, job_name)
     else:
         hookenv.action_set({'hook.url': url})
-
     hookenv.action_set({'build.badge': badge_url})
 
 
